@@ -80,11 +80,22 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 option(BUILD_TESTING "Enable testing" ON)
 option(BUILD_DOCUMENTATION "Build html User's Guide" OFF)
 
+if (${BUILD_TESTING})
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+  )
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+endif (${BUILD_TESTING})
+
 enable_testing()
 if (NOT MSVC)
   add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=1)
 endif (NOT MSVC)
-set(GTEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/libraries/gtest")
+
 add_definitions(-DGTEST_TESTING_OUTPUT_DIRECTORY="${CMAKE_BINARY_DIR}/testing_output")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -250,8 +261,6 @@ include_directories(
   ${cereal_SOURCE_DIR}/include
   ${flann_SOURCE_DIR}
   ${flann_SOURCE_DIR}/src/cpp
-  ${gtest_SOURCE_DIR}/include
-  ${gtest_SOURCE_DIR}
   ${optimo_SOURCE_DIR}
   ${statx_SOURCE_DIR}
   ${stlplus3_SOURCE_DIR}
@@ -343,7 +352,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/TheiaConfig.cmake"
               "${CMAKE_SOURCE_DIR}/cmake/FindEigen.cmake"
               "${CMAKE_SOURCE_DIR}/cmake/FindGlog.cmake"
               "${CMAKE_SOURCE_DIR}/cmake/FindGflags.cmake"
-	            "${CMAKE_SOURCE_DIR}/cmake/FindOpenImageIO.cmake"
               "${CMAKE_SOURCE_DIR}/cmake/FindRocksDB.cmake"
               "${CMAKE_SOURCE_DIR}/cmake/FindSuiteSparse.cmake"
               DESTINATION ${CMAKECONFIG_INSTALL_DIR})

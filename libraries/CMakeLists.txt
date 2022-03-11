@@ -1,7 +1,3 @@
-if (${BUILD_TESTING})
-  add_subdirectory(gtest)
-endif (${BUILD_TESTING})
-
 # AKAZE feature extractor.
 add_subdirectory(akaze)
 

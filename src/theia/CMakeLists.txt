@@ -252,7 +252,7 @@ if (BUILD_TESTING)
     list(GET TEST_NAME_LIST 0 TEST_NAME)
     add_executable(${TEST_NAME}_test test/test_main.cc ${FILENAME}_test.cc)
     target_link_libraries(${TEST_NAME}_test
-      gtest
+      gtest_main
       theia
       ${THEIA_LIBRARY_DEPENDENCIES})
     add_test(NAME ${TEST_NAME}_test
