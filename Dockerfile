@@ -5,6 +5,7 @@ ENV TZ=Europe/Zurich
 
 WORKDIR /usr/src
 
+# Install development dependencies
 RUN apt-get update && apt-get install -y software-properties-common
 RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
 RUN apt-get update && \
@@ -18,6 +19,19 @@ RUN apt-get install -y \
 RUN apt-get install -y \
     libgl1-mesa-dev \
     freeglut3-dev
+
+# Set up X11 forwarding
+RUN apt update \
+    && apt install -y openssh-server \
+                      xauth \
+    && mkdir /var/run/sshd \
+    && mkdir /root/.ssh \
+    && chmod 700 /root/.ssh \
+    && ssh-keygen -A \
+    && sed -i "s/^.*PasswordAuthentication.*$/PasswordAuthentication no/" /etc/ssh/sshd_config \
+    && sed -i "s/^.*X11Forwarding.*$/X11Forwarding yes/" /etc/ssh/sshd_config \
+    && sed -i "s/^.*X11UseLocalhost.*$/X11UseLocalhost no/" /etc/ssh/sshd_config \
+    && grep "^X11UseLocalhost" /etc/ssh/sshd_config || echo "X11UseLocalhost no" >> /etc/ssh/sshd_config
 
 # Update cmake
 RUN apt-get remove -y cmake
