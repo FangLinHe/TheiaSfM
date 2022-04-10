@@ -2,12 +2,12 @@
 # Input/output files.
 # Set these if a matches file is not present. Images should be a filepath with a
 # wildcard e.g., /home/my_username/my_images/*.jpg
---1dsfm_dataset_directory=/usr/src/TheiaSfM/datasets/Gendarmenmarkt
---output_reconstruction=/usr/src/TheiaSfM/results/Gendarmenmarkt
+--1dsfm_dataset_directory=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Code/TheiaSfM/datasets/Gendarmenmarkt
+--output_reconstruction=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Code/TheiaSfM/datasets/Gendarmenmarkt
 
 ############### Multithreading ###############
 # Set to the number of threads you want to use.
---num_threads=4
+--num_threads=16
 
 ############### General SfM Options ###############
 --reconstruction_estimator=GLOBAL
