@@ -56,7 +56,7 @@ struct PairwiseRotationError {
   bool operator() (const T* rotation1, const T* rotation2, T* residuals) const;
 
   static ceres::CostFunction* Create(const Eigen::Vector3d& relative_rotation,
-                                     const double weight);
+                                     const double weight=1.0);
 
   const Eigen::Vector3d relative_rotation_;
   const double weight_;

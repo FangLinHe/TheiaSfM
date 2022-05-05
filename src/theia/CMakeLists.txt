@@ -144,7 +144,6 @@ set(THEIA_SRC
   sfm/global_pose_estimation/linear_position_estimator.cc
   sfm/global_pose_estimation/linear_rotation_estimator.cc
   sfm/global_pose_estimation/nonlinear_position_estimator.cc
-  sfm/global_pose_estimation/nonlinear_rotation_estimator.cc
   sfm/global_pose_estimation/pairwise_rotation_error.cc
   sfm/global_pose_estimation/pairwise_translation_and_scale_error.cc
   sfm/global_pose_estimation/pairwise_translation_error.cc

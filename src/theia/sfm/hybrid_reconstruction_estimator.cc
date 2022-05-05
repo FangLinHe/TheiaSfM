@@ -331,7 +331,7 @@ bool HybridReconstructionEstimator::EstimateCameraOrientations() {
       // spanning tree.
       CHECK(OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_))
           << "Could not estimate orientations from a spanning tree.";
-      rotation_estimator.reset(new NonlinearRotationEstimator());
+      rotation_estimator.reset(new NonlinearRotationEstimator<PairwiseRotationError>());
       break;
     }
     case GlobalRotationEstimatorType::LINEAR: {

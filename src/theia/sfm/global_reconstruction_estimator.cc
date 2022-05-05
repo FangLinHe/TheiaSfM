@@ -336,7 +336,7 @@ bool GlobalReconstructionEstimator::EstimateGlobalRotations() {
       // Initialize the orientation estimations by walking along the maximum
       // spanning tree.
       OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_);
-      rotation_estimator.reset(new NonlinearRotationEstimator());
+      rotation_estimator.reset(new NonlinearRotationEstimator<PairwiseRotationError>());
       break;
     }
     case GlobalRotationEstimatorType::LINEAR: {
