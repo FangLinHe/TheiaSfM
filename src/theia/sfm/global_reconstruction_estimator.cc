@@ -49,6 +49,8 @@
 #include "theia/sfm/global_pose_estimation/linear_rotation_estimator.h"
 #include "theia/sfm/global_pose_estimation/nonlinear_position_estimator.h"
 #include "theia/sfm/global_pose_estimation/nonlinear_rotation_estimator.h"
+#include "theia/sfm/global_pose_estimation/pairwise_quaternion_rotation_error.h"
+#include "theia/sfm/global_pose_estimation/pairwise_rotation_error.h"
 #include "theia/sfm/global_pose_estimation/position_estimator.h"
 #include "theia/sfm/global_pose_estimation/robust_rotation_estimator.h"
 #include "theia/sfm/reconstruction.h"
@@ -337,6 +339,13 @@ bool GlobalReconstructionEstimator::EstimateGlobalRotations() {
       // spanning tree.
       OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_);
       rotation_estimator.reset(new NonlinearRotationEstimator<PairwiseRotationError>());
+      break;
+    }
+    case GlobalRotationEstimatorType::NONLINEAR_QUATERNION_ROTATION_ERROR: {
+      // Initialize the orientation estimations by walking along the maximum
+      // spanning tree.
+      OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_);
+      rotation_estimator.reset(new NonlinearRotationEstimator<PairwiseQuaternionRotationError>());
       break;
     }
     case GlobalRotationEstimatorType::LINEAR: {
