@@ -76,15 +76,16 @@ bool PairwiseQuaternionRotationError::operator()(const T* rotation1,
 
   // Compute the error matrix between the expected relative rotation and the
   // observed relative rotation
-  const auto quaternion_sum = ceres_quaternion_to_eigen<T>(
-      eigen_quaternion_to_ceres<T>(loop_rotation_quat) + relative_rotation_quat.cast<T>());
-  const auto quaternion_res = ceres_quaternion_to_eigen<T>(
-      eigen_quaternion_to_ceres<T>(loop_rotation_quat) - relative_rotation_quat.cast<T>());
+  const Eigen::Matrix<T, 4, 1> quaternion_sum = 
+      eigen_quaternion_to_ceres<T>(loop_rotation_quat) + relative_rotation_quat.cast<T>();
+  const Eigen::Matrix<T, 4, 1> quaternion_res = 
+      eigen_quaternion_to_ceres<T>(loop_rotation_quat) - relative_rotation_quat.cast<T>();
   const auto& residual_quaternion = (quaternion_sum.norm() < quaternion_res.norm()) ? quaternion_sum : quaternion_res;
-  residuals[0] = residual_quaternion.w();
-  residuals[1] = residual_quaternion.x();
-  residuals[2] = residual_quaternion.y();
-  residuals[3] = residual_quaternion.z();
+  Eigen::Matrix<T, 3, 1> residual_angles;
+  ceres::QuaternionToAngleAxis(residual_quaternion.data(), residual_angles.data());
+  residuals[0] = residual_angles[0];
+  residuals[1] = residual_angles[1];
+  residuals[2] = residual_angles[2];
 
   return true;
 }

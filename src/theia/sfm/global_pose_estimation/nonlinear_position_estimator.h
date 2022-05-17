@@ -69,6 +69,7 @@ class NonlinearPositionEstimator : public PositionEstimator {
     // Options for Ceres nonlinear solver.
     int num_threads = 1;
     int max_num_iterations = 400;
+    LossFunctionType loss_function_type = LossFunctionType::HUBER;
     double robust_loss_width = 0.1;
 
     // Minimum number of 3D points to camera correspondences for each
@@ -148,6 +149,9 @@ class NonlinearPositionEstimator : public PositionEstimator {
   friend class EstimatePositionsNonlinearTest;
 
   DISALLOW_COPY_AND_ASSIGN(NonlinearPositionEstimator);
+
+private:
+  std::unique_ptr<ceres::LossFunction> loss_function_;
 };
 
 }  // namespace theia

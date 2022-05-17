@@ -2,8 +2,8 @@
 # Input/output files.
 # Set these if a matches file is not present. Images should be a filepath with a
 # wildcard e.g., /home/my_username/my_images/*.jpg
---1dsfm_dataset_directory=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Code/TheiaSfM/datasets/Gendarmenmarkt
---output_reconstruction=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Code/TheiaSfM/datasets/Gendarmenmarkt
+--1dsfm_dataset_directory=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Code/TheiaSfM/datasets/Ellis_Island
+--output_reconstruction=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Code/TheiaSfM/datasets/Ellis_Island_quaternion_error
 
 ############### Multithreading ###############
 # Set to the number of threads you want to use.
@@ -38,7 +38,6 @@
 
 # Nonlinear position estimation options
 --position_estimation_min_num_tracks_per_view=0
---position_estimation_robust_loss_function=HUBER
 --position_estimation_robust_loss_width=0.1
 
 # If true, perform a single iteration of bundle adjustment only on the camera

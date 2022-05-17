@@ -338,14 +338,18 @@ bool GlobalReconstructionEstimator::EstimateGlobalRotations() {
       // Initialize the orientation estimations by walking along the maximum
       // spanning tree.
       OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_);
-      rotation_estimator.reset(new NonlinearRotationEstimator<PairwiseRotationError>());
+      rotation_estimator.reset(
+          new NonlinearRotationEstimator<PairwiseRotationError>(
+              options_.nonlinear_rotation_estimator_options));
       break;
     }
     case GlobalRotationEstimatorType::NONLINEAR_QUATERNION_ROTATION_ERROR: {
       // Initialize the orientation estimations by walking along the maximum
       // spanning tree.
       OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_);
-      rotation_estimator.reset(new NonlinearRotationEstimator<PairwiseQuaternionRotationError>());
+      rotation_estimator.reset(
+          new NonlinearRotationEstimator<PairwiseQuaternionRotationError>(
+              options_.nonlinear_rotation_estimator_options));
       break;
     }
     case GlobalRotationEstimatorType::LINEAR: {

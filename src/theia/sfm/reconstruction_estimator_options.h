@@ -41,6 +41,7 @@
 #include "theia/sfm/global_pose_estimation/least_unsquared_deviation_position_estimator.h"
 #include "theia/sfm/global_pose_estimation/linear_position_estimator.h"
 #include "theia/sfm/global_pose_estimation/nonlinear_position_estimator.h"
+#include "theia/sfm/global_pose_estimation/nonlinear_rotation_estimator.h"
 #include "theia/util/random.h"
 
 namespace theia {
@@ -150,6 +151,7 @@ struct ReconstructionEstimatorOptions {
   double translation_filtering_projection_tolerance = 0.1;
 
   // --------------- Global Rotation Estimation Options --------------- //
+  NonlinearRotationEstimatorOptions nonlinear_rotation_estimator_options;
 
   // Robust loss function scales for nonlinear estimation.
   double rotation_estimation_robust_loss_scale = 0.1;

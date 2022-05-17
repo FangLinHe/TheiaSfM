@@ -36,8 +36,13 @@
 # outliers in the relative pose measurements.
 --filter_relative_translations_with_1dsfm=true
 
+# Nonlinear rotation estimation options
+--rotation_estimation_robust_loss_function=SOFTLONE
+--rotation_estimation_robust_loss_width=0.1
+
 # Nonlinear position estimation options
 --position_estimation_min_num_tracks_per_view=0
+--position_estimation_robust_loss_function=HUBER
 --position_estimation_robust_loss_width=0.1
 
 # If true, perform a single iteration of bundle adjustment only on the camera

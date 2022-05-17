@@ -84,9 +84,11 @@ bool CompareViewsPerTrack(const std::pair<TrackId, int>& t1,
 }  // namespace
 
 NonlinearPositionEstimator::NonlinearPositionEstimator(
-    const NonlinearPositionEstimator::Options& options,
-    const Reconstruction& reconstruction)
-    : options_(options), reconstruction_(reconstruction) {
+    const NonlinearPositionEstimator::Options &options,
+    const Reconstruction &reconstruction)
+    : options_(options), reconstruction_(reconstruction),
+      loss_function_(CreateLossFunction(options_.loss_function_type,
+                                        options_.robust_loss_width)) {
   CHECK_GT(options_.num_threads, 0);
   CHECK_GE(options_.min_num_points_per_view, 0);
   CHECK_GT(options_.point_to_camera_weight, 0);
@@ -182,6 +184,7 @@ void NonlinearPositionEstimator::InitializeRandomPositions(
 void NonlinearPositionEstimator::AddCameraToCameraConstraints(
     const std::unordered_map<ViewId, Vector3d>& orientations,
     std::unordered_map<ViewId, Vector3d>* positions) {
+  CHECK(loss_function_ != nullptr);
   for (const auto& view_pair : *view_pairs_) {
     const ViewId view_id1 = view_pair.first.first;
     const ViewId view_id2 = view_pair.first.second;
@@ -201,9 +204,7 @@ void NonlinearPositionEstimator::AddCameraToCameraConstraints(
     ceres::CostFunction* cost_function =
         PairwiseTranslationError::Create(translation_direction, 1.0);
 
-    problem_->AddResidualBlock(cost_function,
-                               new ceres::HuberLoss(options_.robust_loss_width),
-                               position1->data(),
+    problem_->AddResidualBlock(cost_function, loss_function_.get(), position1->data(),
                                position2->data());
   }
 
