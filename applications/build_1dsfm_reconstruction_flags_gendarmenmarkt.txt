@@ -12,15 +12,14 @@
 ############### General SfM Options ###############
 --reconstruction_estimator=GLOBAL
 --min_num_inliers_for_valid_match=30
---min_track_length=2
+--min_track_length=3
 --max_track_length=50
---reconstruct_largest_connected_component=false
+--reconstruct_largest_connected_component=true
 # If set to true, only views with known calibration are reconstructed.
 --only_calibrated_views=false
 
 ############### Global SfM Options ###############
 --global_position_estimator=LEAST_UNSQUARED_DEVIATION
- #ROBUST_L1L2
 --global_rotation_estimator=NONLINEAR
 --post_rotation_filtering_degrees=15.0
 
@@ -48,7 +47,7 @@
 # If true, perform a single iteration of bundle adjustment only on the camera
 # positions and 3D points (rotation and camera intrinsics are held
 # constant). This helps often to constrain inaccurate intrinsics.
---refine_camera_positions_and_points_after_position_estimation=true
+--refine_camera_positions_and_points_after_position_estimation=false
 
 # After estimating camera poses, we perform trianguation, then BA,
 # then filter out bad points. This controls how many times we repeat
@@ -69,7 +68,7 @@
 # Set this parameter to a value other than NONE if you want to utilize a robust
 # cost function during bundle adjustment. This can increase robustness to outliers
 # during the optimization.
---bundle_adjustment_robust_loss_function=HUBER
+--bundle_adjustment_robust_loss_function=CAUCHY
 
 # Set this value to the determine the reprojection error in pixelst at which
 # robustness begins (if a robust cost function is being used).
@@ -110,8 +109,8 @@
 --min_num_optimized_tracks_per_view=100
 
 ############### Triangulation Options ###############
---min_triangulation_angle_degrees=4.0
---triangulation_reprojection_error_pixels=15.0
+--min_triangulation_angle_degrees=3.0
+--triangulation_reprojection_error_pixels=12.0
 --bundle_adjust_tracks=true
 
 ############### Logging Options ###############
