@@ -9,7 +9,7 @@
 
 namespace ceres {
 class CostFunction;
-}  // namespace ceres
+} // namespace ceres
 
 namespace theia {
 
@@ -19,8 +19,7 @@ namespace theia {
 // Ref: https://link.springer.com/content/pdf/10.1007/s11263-012-0601-0.pdf
 // See Quaternion Distance on page 276
 
-template <typename T>
-T quaternion_absolute(const Eigen::Quaternion<T> &q) {
+template <typename T> T quaternion_absolute(const Eigen::Quaternion<T> &q) {
   return sqrt(q.w() * q.w() + q.x() * q.x() + q.y() * q.y() + q.z() * q.z());
 }
 
@@ -32,41 +31,50 @@ Eigen::Quaternion<T> quaternion_subtract(const Eigen::Quaternion<T> &q1,
 }
 
 struct PairwiseQuaternionRotationError {
-  PairwiseQuaternionRotationError(const Eigen::Vector3d& relative_rotation);
+  PairwiseQuaternionRotationError(const Eigen::Vector3d &relative_rotation,
+                                  double weight = 1.0);
 
   // The error is given by the rotation loop error as specified above. We return
   // 3 residuals to give more opportunity for optimization.
   template <typename T>
-  bool operator()(const T* rotation1, const T* rotation2, T* residuals) const;
+  bool operator()(const T *rotation1, const T *rotation2, T *residuals) const;
 
-  static ceres::CostFunction* Create(const Eigen::Vector3d& relative_rotation);
+  static ceres::CostFunction *Create(const Eigen::Vector3d &relative_rotation,
+                                     double weight = 1.0);
 
+private:
   const Eigen::Vector3d relative_rotation_;
+  const double weight_;
 };
 
 template <typename T>
-Eigen::Quaternion<T> ceres_quaternion_to_eigen(const Eigen::Matrix<T, 4, 1>& ceres_quat) {
+Eigen::Quaternion<T>
+ceres_quaternion_to_eigen(const Eigen::Matrix<T, 4, 1> &ceres_quat) {
   // Eigen quaternion: x, y, z, w
   // Ceres quaternion: w, x, y, z
-  return Eigen::Quaternion<T>{ ceres_quat[1], ceres_quat[2], ceres_quat[3], ceres_quat[0] };
+  return Eigen::Quaternion<T>{ceres_quat[1], ceres_quat[2], ceres_quat[3],
+                              ceres_quat[0]};
 }
 
 template <typename T>
-Eigen::Matrix<T, 4, 1> eigen_quaternion_to_ceres(const Eigen::Quaternion<T>& eigen_quat) {
+Eigen::Matrix<T, 4, 1>
+eigen_quaternion_to_ceres(const Eigen::Quaternion<T> &eigen_quat) {
   // Eigen quaternion: x, y, z, w
   // Ceres quaternion: w, x, y, z
-  return Eigen::Matrix<T, 4, 1>{ eigen_quat.w(), eigen_quat.x(), eigen_quat.y(), eigen_quat.z() };
+  return Eigen::Matrix<T, 4, 1>{eigen_quat.w(), eigen_quat.x(), eigen_quat.y(),
+                                eigen_quat.z()};
 }
 
 template <typename T>
-bool PairwiseQuaternionRotationError::operator()(const T* rotation1,
-                                                 const T* rotation2,
-                                                 T* residuals) const {
+bool PairwiseQuaternionRotationError::operator()(const T *rotation1,
+                                                 const T *rotation2,
+                                                 T *residuals) const {
   Eigen::Matrix<T, 4, 1> quaternion1, quaternion2;
   Eigen::Vector4d relative_rotation_quat;
   ceres::AngleAxisToQuaternion(rotation1, quaternion1.data());
   ceres::AngleAxisToQuaternion(rotation2, quaternion2.data());
-  ceres::AngleAxisToQuaternion(relative_rotation_.data(), relative_rotation_quat.data());
+  ceres::AngleAxisToQuaternion(relative_rotation_.data(),
+                               relative_rotation_quat.data());
 
   // Compute the loop rotation from the two global rotations.
   const auto loop_rotation_quat =
@@ -76,20 +84,25 @@ bool PairwiseQuaternionRotationError::operator()(const T* rotation1,
 
   // Compute the error matrix between the expected relative rotation and the
   // observed relative rotation
-  const Eigen::Matrix<T, 4, 1> quaternion_sum = 
-      eigen_quaternion_to_ceres<T>(loop_rotation_quat) + relative_rotation_quat.cast<T>();
-  const Eigen::Matrix<T, 4, 1> quaternion_res = 
-      eigen_quaternion_to_ceres<T>(loop_rotation_quat) - relative_rotation_quat.cast<T>();
-  const auto& residual_quaternion = (quaternion_sum.norm() < quaternion_res.norm()) ? quaternion_sum : quaternion_res;
+  const Eigen::Matrix<T, 4, 1> quaternion_sum =
+      eigen_quaternion_to_ceres<T>(loop_rotation_quat) +
+      relative_rotation_quat.cast<T>();
+  const Eigen::Matrix<T, 4, 1> quaternion_res =
+      eigen_quaternion_to_ceres<T>(loop_rotation_quat) -
+      relative_rotation_quat.cast<T>();
+  const auto &residual_quaternion =
+      (quaternion_sum.norm() < quaternion_res.norm()) ? quaternion_sum
+                                                      : quaternion_res;
   Eigen::Matrix<T, 3, 1> residual_angles;
-  ceres::QuaternionToAngleAxis(residual_quaternion.data(), residual_angles.data());
-  residuals[0] = residual_angles[0];
-  residuals[1] = residual_angles[1];
-  residuals[2] = residual_angles[2];
+  ceres::QuaternionToAngleAxis(residual_quaternion.data(),
+                               residual_angles.data());
+  residuals[0] = weight_ * residual_angles[0];
+  residuals[1] = weight_ * residual_angles[1];
+  residuals[2] = weight_ * residual_angles[2];
 
   return true;
 }
 
-}  // namespace theia
+} // namespace theia
 
-#endif  // THEIA_SFM_GLOBAL_POSE_ESTIMATION_PAIRWISE_QUATERNION_ROTATION_ERROR_H_
+#endif // THEIA_SFM_GLOBAL_POSE_ESTIMATION_PAIRWISE_QUATERNION_ROTATION_ERROR_H_

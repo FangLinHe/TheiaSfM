@@ -59,21 +59,42 @@ struct NonlinearRotationEstimatorOptions {
   // Options for Ceres nonlinear solver.
   LossFunctionType loss_function_type = LossFunctionType::HUBER;
   double robust_loss_width = 0.1;
+  bool const_weight = false;  // set to const weight 1.0
+  double min_weight = 0.5;
+  int min_num_inlier_matches = 30;   // map to weight close to min_weight
+  int max_num_inlier_matches = 200;  // map to weight close to 1.0
 };
 
 template <class CostFunctionGenerator = PairwiseRotationError>
 class NonlinearRotationEstimator : public RotationEstimator {
 public:
   using Options = NonlinearRotationEstimatorOptions;
-  NonlinearRotationEstimator(const Options &options)
-      : loss_function_(CreateLossFunction(options.loss_function_type,
-                                          options.robust_loss_width)) {}
-
   NonlinearRotationEstimator() : NonlinearRotationEstimator(0.1) {}
 
-  explicit NonlinearRotationEstimator(double robust_loss_width)
-      : loss_function_(CreateLossFunction(LossFunctionType::SOFTLONE,
-                                          robust_loss_width)) {}
+  explicit NonlinearRotationEstimator(const Options &options)
+      : NonlinearRotationEstimator(
+            options.loss_function_type, options.robust_loss_width,
+            options.const_weight, options.min_weight,
+            static_cast<double>(options.min_num_inlier_matches +
+                                options.max_num_inlier_matches) *
+                0.5,
+            static_cast<double>(options.max_num_inlier_matches -
+                                options.min_num_inlier_matches) /
+                12.0) {}
+
+  explicit NonlinearRotationEstimator(double robust_loss_width,
+                                      bool const_weight = false,
+                                      double min_weight = 0.5,
+                                      int min_num_inlier_matches = 30,
+                                      int max_num_inlier_matches = 200)
+      : NonlinearRotationEstimator(LossFunctionType::SOFTLONE,
+                                   robust_loss_width, const_weight, min_weight,
+                                   static_cast<double>(min_num_inlier_matches +
+                                                       max_num_inlier_matches) *
+                                       0.5,
+                                   static_cast<double>(max_num_inlier_matches -
+                                                       min_num_inlier_matches) /
+                                       12.0) {}
 
   // Estimates the global orientations of all views based on an initial
   // guess. Returns true on successful estimation and false otherwise.
@@ -112,8 +133,9 @@ public:
         continue;
       }
 
-      ceres::CostFunction *cost_function =
-          CostFunctionGenerator::Create(view_pair.second.rotation_2);
+      ceres::CostFunction *cost_function = CostFunctionGenerator::Create(
+          view_pair.second.rotation_2,
+          (const_weight_) ? 1.0 : compute_weight(view_pair.second));
       problem->AddResidualBlock(cost_function, loss_function_.get(),
                                 rotation1->data(), rotation2->data());
     }
@@ -131,7 +153,28 @@ public:
   }
 
 private:
+  NonlinearRotationEstimator(theia::LossFunctionType loss_function_type,
+                             double robust_loss_width, bool const_weight,
+                             double min_weight, double mid_point, double scale)
+      : loss_function_(
+            CreateLossFunction(loss_function_type, robust_loss_width)),
+        const_weight_(const_weight), min_weight_(min_weight),
+        mid_point_(mid_point), scale_(scale) {}
+
+  double compute_weight(const TwoViewInfo& two_view_info) const {
+    return compute_weight(two_view_info.num_verified_matches);
+  }
+
+  double compute_weight(int num_verified_matches) const {
+    auto weight = 1 / (1 + exp(-(static_cast<double>(num_verified_matches) - mid_point_) / scale_));
+    return min_weight_ + weight * (1.0 - min_weight_);
+  }
+
   std::unique_ptr<ceres::LossFunction> loss_function_;
+  bool const_weight_;
+  double min_weight_;
+  double mid_point_;
+  double scale_;
 };
 
 } // namespace theia

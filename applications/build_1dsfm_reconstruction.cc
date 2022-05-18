@@ -134,6 +134,22 @@ DEFINE_string(rotation_estimation_robust_loss_function,
 DEFINE_double(rotation_estimation_robust_loss_width,
               0.1,
               "Robust loss width to use for rotation estimation.");
+DEFINE_bool(rotation_estimation_const_weight,
+            false,
+            "Use constant weight = 1.0 for all view pairs when computing "
+            "rotation residuals.");
+DEFINE_double(rotation_estimation_min_weight,
+              0.5,
+              "Minimum value of rotation residual weight, so the weights are in "
+              "range [rotation_estimation_min_weight, 1].");
+DEFINE_int32(rotation_estimation_min_num_inlier_matches,
+             30,
+             "Map the number of inlier matches to a weight, where this value "
+             "would be mapped to the weight close to rotation_estimation_min_weight.");
+DEFINE_int32(rotation_estimation_max_num_inlier_matches,
+             200,
+             "Map the number of inlier matches to a weight, where this value "
+             "would be mapped to the weight close to 1.");
 
 // Nonlinear position estimation options.
 DEFINE_int32(
@@ -261,6 +277,7 @@ ReconstructionBuilderOptions SetReconstructionBuilderOptions() {
       FLAGS_extract_maximal_rigid_subgraph;
   reconstruction_estimator_options.filter_relative_translations_with_1dsfm =
       FLAGS_filter_relative_translations_with_1dsfm;
+
   reconstruction_estimator_options.rotation_filtering_max_difference_degrees =
       FLAGS_post_rotation_filtering_degrees;
   reconstruction_estimator_options.nonlinear_rotation_estimator_options
@@ -268,6 +285,17 @@ ReconstructionBuilderOptions SetReconstructionBuilderOptions() {
       StringToLossFunction(FLAGS_rotation_estimation_robust_loss_function);
   reconstruction_estimator_options.nonlinear_rotation_estimator_options
       .robust_loss_width = FLAGS_rotation_estimation_robust_loss_width;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .const_weight = FLAGS_rotation_estimation_const_weight;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .min_weight = FLAGS_rotation_estimation_min_weight;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .min_num_inlier_matches =
+      FLAGS_rotation_estimation_min_num_inlier_matches;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .max_num_inlier_matches =
+      FLAGS_rotation_estimation_max_num_inlier_matches;
+
   reconstruction_estimator_options.nonlinear_position_estimator_options
       .min_num_points_per_view =
       FLAGS_position_estimation_min_num_tracks_per_view;

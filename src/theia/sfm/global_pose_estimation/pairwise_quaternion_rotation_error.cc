@@ -6,13 +6,16 @@
 namespace theia {
 
 PairwiseQuaternionRotationError::PairwiseQuaternionRotationError(
-    const Eigen::Vector3d& relative_rotation)
-    : relative_rotation_(relative_rotation) {}
+    const Eigen::Vector3d& relative_rotation,
+    double weight)
+    : relative_rotation_(relative_rotation), weight_(weight) {}
 
 ceres::CostFunction* PairwiseQuaternionRotationError::Create(
-    const Eigen::Vector3d& relative_rotation) {
-  return new ceres::AutoDiffCostFunction<PairwiseQuaternionRotationError, 3, 3, 3>(
-      new PairwiseQuaternionRotationError(relative_rotation));
+    const Eigen::Vector3d& relative_rotation,
+    double weight) {
+  return new ceres::AutoDiffCostFunction<PairwiseQuaternionRotationError, 3, 3,
+                                         3>(
+      new PairwiseQuaternionRotationError(relative_rotation, weight));
 }
 
 }  // namespace theia
