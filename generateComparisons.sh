@@ -33,7 +33,7 @@ echo "================================================================="
 echo "Generate comparisons for the following settings:"
 echo "* DATASET_NAME: $DATASET_NAME"
 echo "* ROTATION_ESTIMATOR: $ROTATION_ESTIMATOR"
-if [[ "$ROTATION_ESTIMATOR" = NONLINEAR ]]
+if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 ]]
 then
     echo "* ROBUST_LOSS_FUNCTION: $ROBUST_LOSS_FUNCTION"
     echo "* ROBUST_LOSS_WIDTH: $ROBUST_LOSS_WIDTH"
@@ -47,7 +47,7 @@ FORCE_BUILD_RECONSTRUCTION=false
 WEIGHT_TYPE="$([ "$CONST_WEIGHT" = true ] && echo "CONST-WEIGHT" || echo "DYNAMIC-WEIGHT")"
 WEIGHT_ARG="$([ "$CONST_WEIGHT" = true ] && echo "--rotation_estimation_const_weight" || echo "--norotation_estimation_const_weight")"
 OUTPUT_RECONSTRUCTION_NAME="$DATASET_NAME-$ROTATION_ESTIMATOR"
-if [[ "$ROTATION_ESTIMATOR" = NONLINEAR ]]
+if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 ]]
 then
     OUTPUT_RECONSTRUCTION_NAME="$OUTPUT_RECONSTRUCTION_NAME-$WEIGHT_TYPE-$ROBUST_LOSS_FUNCTION-$ROBUST_LOSS_WIDTH"
 fi
