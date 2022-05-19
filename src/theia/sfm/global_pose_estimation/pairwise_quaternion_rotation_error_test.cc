@@ -138,7 +138,6 @@ TEST(PairwiseQuaternionRotationError, IncrementalRotation) {
     Eigen::Vector3d estimated_rotation_error;
     global_rotation_error(rotation1.data(), rotation2.data(),
                           estimated_rotation_error.data());
-    std::cout << i << ": " << estimated_quat_rotation_error << "; " << estimated_rotation_error << "\n\n";
 
     prev_error = estimated_quat_rotation_error[0];
   }
@@ -187,27 +186,6 @@ TEST(PairwiseQuaternionRotationError, OneHundredEightyDegreeRotation) {
                                    relative_rot_vec.data());
   Eigen::Vector4d relative_rotation_quat;
   ceres::AngleAxisToQuaternion(relative_rot_vec.data(), relative_rotation_quat.data());
-
-//   Eigen::Quaterniond q1 = Eigen::Quaterniond(global_rot_1_mat);
-//   Eigen::Quaterniond q2 = Eigen::Quaterniond(global_rot_2_mat);
-//   auto rel_q1q2 = q2 * q1.inverse();
-//   std::cerr << "q1 q2 angular distance: " << q1.angularDistance(q2) << std::endl;
-//   std::cerr << "Rel quaternion: " << rel_q1q2.w() << ", " << rel_q1q2.x() << ", " << rel_q1q2.y() << ", " << rel_q1q2.z() << std::endl;
-//   Eigen::Quaterniond rel_q = Eigen::Quaterniond(relative_rot);
-
-//   std::cerr << "relative_rotation_quat: " << relative_rotation_quat << std::endl;
-//   std::cerr << "relative_rotation_quat: " << rel_q << std::endl;
-  
-//   std::cerr << "two rel quat angular distance: " << rel_q1q2.angularDistance(rel_q) << std::endl;
-//   std::cerr << "Rel quaternion: " << rel_q.w() << ", " << rel_q.x() << ", " << rel_q.y() << ", " << rel_q.z() << std::endl;
-//   auto n1 = (rel_q1q2.coeffs() + rel_q.coeffs()).norm();
-//   auto n2 = (rel_q1q2.coeffs() - rel_q.coeffs()).norm();
-//   std::cerr << "std::min: " << std::min(n1, n2) << std::endl;
-//   std::cerr << "min: " << fmin(n1, n2) << std::endl;
-//   std::cerr << "Quaternion sum norm: " << (rel_q1q2.coeffs() + rel_q.coeffs()).norm() << std::endl;
-//   std::cerr << "Quaternion sum norm: " << Eigen::Quaterniond(rel_q1q2.coeffs() + rel_q.coeffs()).norm() << std::endl;
-//   std::cerr << "Quaternion res norm: " << (rel_q1q2.coeffs() - rel_q.coeffs()).norm() << std::endl;
-//   std::cerr << "Quaternion res norm: " << Eigen::Quaterniond(rel_q1q2.coeffs() - rel_q.coeffs()).norm() << std::endl;
 }
 
 TEST(PairwiseQuaternionRotationError, Weight) {

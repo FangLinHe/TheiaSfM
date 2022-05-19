@@ -13,7 +13,7 @@ PairwiseQuaternionRotationError::PairwiseQuaternionRotationError(
 ceres::CostFunction* PairwiseQuaternionRotationError::Create(
     const Eigen::Vector3d& relative_rotation,
     double weight) {
-  return new ceres::AutoDiffCostFunction<PairwiseQuaternionRotationError, 3, 3,
+  return new ceres::AutoDiffCostFunction<PairwiseQuaternionRotationError, 1, 3,
                                          3>(
       new PairwiseQuaternionRotationError(relative_rotation, weight));
 }

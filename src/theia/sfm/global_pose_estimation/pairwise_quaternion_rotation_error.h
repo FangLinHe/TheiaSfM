@@ -50,21 +50,25 @@ private:
 template <typename T>
 Eigen::Quaternion<T>
 ceres_quaternion_to_eigen(const Eigen::Matrix<T, 4, 1> &ceres_quat) {
-  // Eigen quaternion: x, y, z, w
-  // Ceres quaternion: w, x, y, z
-  return Eigen::Quaternion<T>{ceres_quat[1], ceres_quat[2], ceres_quat[3],
-                              ceres_quat[0]};
+  return Eigen::Quaternion<T>{ceres_quat[0], ceres_quat[1], ceres_quat[2],
+                              ceres_quat[3]};
 }
 
 template <typename T>
 Eigen::Matrix<T, 4, 1>
 eigen_quaternion_to_ceres(const Eigen::Quaternion<T> &eigen_quat) {
-  // Eigen quaternion: x, y, z, w
-  // Ceres quaternion: w, x, y, z
   return Eigen::Matrix<T, 4, 1>{eigen_quat.w(), eigen_quat.x(), eigen_quat.y(),
                                 eigen_quat.z()};
 }
 
+
+/**
+ * eps = 1e-15
+ * q = q / (np.linalg.norm(q) + eps)
+ * q_gt = q_gt / (np.linalg.norm(q_gt) + eps)
+ * loss_q = np.maximum(eps, (1.0 - np.sum(q * q_gt)**2))
+ * err_q = np.arccos(1 - 2 * loss_q)
+ */
 template <typename T>
 bool PairwiseQuaternionRotationError::operator()(const T *rotation1,
                                                  const T *rotation2,
@@ -77,28 +81,20 @@ bool PairwiseQuaternionRotationError::operator()(const T *rotation1,
                                relative_rotation_quat.data());
 
   // Compute the loop rotation from the two global rotations.
-  const auto loop_rotation_quat =
+  const Eigen::Quaternion<T> loop_rotation_quat =
       (ceres_quaternion_to_eigen<T>(quaternion2) *
        ceres_quaternion_to_eigen<T>(quaternion1).inverse())
           .normalized();
 
-  // Compute the error matrix between the expected relative rotation and the
-  // observed relative rotation
-  const Eigen::Matrix<T, 4, 1> quaternion_sum =
-      eigen_quaternion_to_ceres<T>(loop_rotation_quat) +
-      relative_rotation_quat.cast<T>();
-  const Eigen::Matrix<T, 4, 1> quaternion_res =
-      eigen_quaternion_to_ceres<T>(loop_rotation_quat) -
-      relative_rotation_quat.cast<T>();
-  const auto &residual_quaternion =
-      (quaternion_sum.norm() < quaternion_res.norm()) ? quaternion_sum
-                                                      : quaternion_res;
-  Eigen::Matrix<T, 3, 1> residual_angles;
-  ceres::QuaternionToAngleAxis(residual_quaternion.data(),
-                               residual_angles.data());
-  residuals[0] = weight_ * residual_angles[0];
-  residuals[1] = weight_ * residual_angles[1];
-  residuals[2] = weight_ * residual_angles[2];
+  // loss_q = np.maximum(eps, (1.0 - np.sum(q * q_gt)**2))
+  const double eps = 1e-15;
+  const Eigen::Quaternion<T> gt_quat =
+      ceres_quaternion_to_eigen<T>(relative_rotation_quat.cast<T>()).normalized();
+  auto quaternion_mulsum = loop_rotation_quat.dot(gt_quat);
+  auto loss_q = fmax(eps, 1.0 - quaternion_mulsum * quaternion_mulsum);
+  auto err_q = acos(1.0 - 2.0 * loss_q);
+
+  residuals[0] = weight_ * err_q;
 
   return true;
 }
