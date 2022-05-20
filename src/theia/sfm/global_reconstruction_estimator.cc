@@ -492,6 +492,10 @@ bool GlobalReconstructionEstimator::BundleAdjustment() {
   }
   LOG(INFO) << "Selected " << tracks_to_optimize.size()
             << " tracks to optimize.";
+  if (tracks_to_optimize.empty()) {
+    LOG(WARNING) << "No tracks to optimize. Do nothing.";
+    return false;
+  }
 
   std::unordered_set<ViewId> views_to_optimize;
   GetEstimatedViewsFromReconstruction(*reconstruction_,
