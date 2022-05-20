@@ -112,7 +112,11 @@ bool NonlinearPositionEstimator::EstimatePositions(
     return false;
   }
   triangulated_points_.clear();
-  problem_.reset(new ceres::Problem());
+
+  ceres::Problem::Options problem_options;
+  problem_options.loss_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
+  problem_.reset(new ceres::Problem(problem_options));
+
   view_pairs_ = &view_pairs;
 
   // Iterative schur is only used if the problem is large enough, otherwise
