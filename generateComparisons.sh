@@ -25,19 +25,24 @@ CONVERT_GT_RECONSTRUCTION_LOG_DIR="$LOGS_ROOT"/convert_gt_reconstruction_logs
 
 DATASET_NAME="${1:-Madrid_Metropolis}"
 ROTATION_ESTIMATOR="${2:-NONLINEAR}"
-ROBUST_LOSS_FUNCTION="${3:-HUBER}"
-ROBUST_LOSS_WIDTH="${4:-0.05}"
-CONST_WEIGHT="${5:-true}"
+POSITION_ESTIMATOR="${3:-LEAST_UNSQUARED_DEVIATION}"
+ROBUST_LOSS_FUNCTION="${4:-HUBER}"
+ROBUST_LOSS_WIDTH="${5:-0.05}"
+CONST_WEIGHT="${6:-true}"
 
 echo "================================================================="
 echo "Generate comparisons for the following settings:"
 echo "* DATASET_NAME: $DATASET_NAME"
 echo "* ROTATION_ESTIMATOR: $ROTATION_ESTIMATOR"
-if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 ]]
+echo "* POSITION_ESTIMATOR: $POSITION_ESTIMATOR"
+if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 || "$POSITION_ESTIMATOR" == NONLINEAR ]]
 then
     echo "* ROBUST_LOSS_FUNCTION: $ROBUST_LOSS_FUNCTION"
     echo "* ROBUST_LOSS_WIDTH: $ROBUST_LOSS_WIDTH"
-    echo "* CONST_WEIGHT: $CONST_WEIGHT"
+    if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 ]]
+    then
+        echo "* CONST_WEIGHT: $CONST_WEIGHT"
+    fi
 fi
 echo "================================================================="
 
@@ -47,6 +52,10 @@ FORCE_BUILD_RECONSTRUCTION=false
 WEIGHT_TYPE="$([ "$CONST_WEIGHT" = true ] && echo "CONST-WEIGHT" || echo "DYNAMIC-WEIGHT")"
 WEIGHT_ARG="$([ "$CONST_WEIGHT" = true ] && echo "--rotation_estimation_const_weight" || echo "--norotation_estimation_const_weight")"
 OUTPUT_RECONSTRUCTION_NAME="$DATASET_NAME-$ROTATION_ESTIMATOR"
+if [[ "$POSITION_ESTIMATOR" != LEAST_UNSQUARED_DEVIATION ]]
+then
+    OUTPUT_RECONSTRUCTION_NAME="$OUTPUT_RECONSTRUCTION_NAME-$POSITION_ESTIMATOR"
+fi
 if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 ]]
 then
     OUTPUT_RECONSTRUCTION_NAME="$OUTPUT_RECONSTRUCTION_NAME-$WEIGHT_TYPE-$ROBUST_LOSS_FUNCTION-$ROBUST_LOSS_WIDTH"
@@ -80,8 +89,11 @@ then
             --output_reconstruction "$DATASET_ROOT/$DATASET_NAME/$OUTPUT_RECONSTRUCTION_NAME" \
             "$WEIGHT_ARG" \
             --global_rotation_estimator "$ROTATION_ESTIMATOR" \
+            --global_position_estimator "$POSITION_ESTIMATOR" \
             --rotation_estimation_robust_loss_function "$ROBUST_LOSS_FUNCTION" \
             --rotation_estimation_robust_loss_width "$ROBUST_LOSS_WIDTH" \
+            --position_estimation_robust_loss_function "$ROBUST_LOSS_FUNCTION" \
+            --position_estimation_robust_loss_width "$ROBUST_LOSS_WIDTH" \
             --log_dir "$BUILD_RECONSTRUCTION_LOG_DIR" \
             --nologtostderr \
         && break
