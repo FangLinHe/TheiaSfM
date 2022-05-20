@@ -8,7 +8,7 @@ CSV_OUTPUT = Path(__file__).parent / "logs" / "compare_reconstruction_results.cs
 DEDUPLICATE = True
 
 if __name__ == '__main__':
-    column_names = ['dataset', 'cost_function', 'weight_type', 'loss_function', 'robust_width',
+    column_names = ['dataset', 'rot_cost_function', 'pos_cost_function', 'weight_type', 'loss_function', 'robust_width',
                     'gt_total_cameras', 'total_cameras', 'common_cameras',
                     'gt_total_3d_points', 'total_3d_points',
                     'rotation_error_mean', 'rotation_error_median',
@@ -19,23 +19,32 @@ if __name__ == '__main__':
     for log_path in LOG_FOLDER.glob('*.txt'):
         row = {}
 
-        regexp1 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)-(\S+)-WEIGHT-(\S+)-(\S+)\.txt')
-        regexp2 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)\.txt')
+        regexp1 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)-(\S+)-(\S+)-WEIGHT-(\S+)-(\S+)\.txt')
+        regexp2 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)-(\S+)-WEIGHT-(\S+)-(\S+)\.txt')
+        regexp3 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)\.txt')
         re_match = regexp1.match(log_path.name)
         if re_match:
-            dataset, cost_function, weight_type, loss_function, robust_width = re_match.groups()
+            dataset, rot_cost_function, pos_cost_function, weight_type, loss_function, robust_width = re_match.groups()
         else:
             re_match = regexp2.match(log_path.name)
-            assert re_match is not None
-            dataset, cost_function = re_match.groups()
-            weight_type = loss_function = robust_width = 'N/A'
+            if re_match:
+                dataset, rot_cost_function, weight_type, loss_function, robust_width = re_match.groups()
+                pos_cost_function = 'LEAST_UNSQUARED_DEV'
+            else:
+                re_match = regexp3.match(log_path.name)
+                assert re_match is not None
+                dataset, rot_cost_function = re_match.groups()
+                pos_cost_function = 'LEAST_UNSQUARED_DEV'
+                weight_type = loss_function = robust_width = 'N/A'
+
         print(log_path)
-        key = '-'.join((dataset, cost_function, weight_type, loss_function, robust_width))
+        key = '-'.join((dataset, rot_cost_function, pos_cost_function, weight_type, loss_function, robust_width))
         if key in keys:
             continue
         keys.add(key)
         row['dataset'] = dataset
-        row['cost_function'] = cost_function
+        row['rot_cost_function'] = rot_cost_function
+        row['pos_cost_function'] = pos_cost_function
         row['weight_type'] = weight_type
         row['loss_function'] = loss_function
         row['robust_width'] = robust_width
