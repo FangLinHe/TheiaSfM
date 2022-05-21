@@ -391,7 +391,7 @@ void NonlinearPositionEstimator::AddTrackToProblem(
 
     // Add the residual block
     problem_->AddResidualBlock(cost_function,
-                               new ceres::HuberLoss(options_.robust_loss_width),
+                               loss_function_.get(),
                                camera_position.data(),
                                point.data());
   }
