@@ -4,7 +4,7 @@ set -e
 THEIASFM_ROOT=$(dirname "$0")
 SCRIPT_PATH="$THEIASFM_ROOT/generateComparisons.sh"
 
-for POSITION_ESTIMATOR in LEAST_UNSQUARED_DEVIATION
+for POSITION_ESTIMATOR in NONLINEAR # LEAST_UNSQUARED_DEVIATION
 do
     for DATASET_NAME in Roman_Forum Gendarmenmarkt Madrid_Metropolis Alamo
     do
@@ -12,7 +12,7 @@ do
         do
             for ROBUST_LOSS_FUNCTION in NONE HUBER SOFTLONE CAUCHY ARCTAN TUKEY
             do
-                for ROBUST_LOSS_WIDTH in 0.05 0.1 0.15 0.2 0.25 0.3 0.35
+                for ROBUST_LOSS_WIDTH in 0.1 0.2 0.3
                 do
                     for CONST_WEIGHT in true false
                     do
