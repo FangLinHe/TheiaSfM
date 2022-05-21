@@ -82,7 +82,7 @@
 
 # After BA, remove any points that have a reprojection error greater
 # than this.
---max_reprojection_error_pixels=4.0
+--max_reprojection_error_pixels=6.0
 
 ############### Track Subsampling Options ###############
 
