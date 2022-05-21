@@ -72,6 +72,12 @@ class NonlinearPositionEstimator : public PositionEstimator {
     LossFunctionType loss_function_type = LossFunctionType::HUBER;
     double robust_loss_width = 0.1;
 
+    // For computing weights of cost function
+    bool const_weight = false;  // set to const weight 1.0
+    double min_weight = 0.5;
+    int min_num_inlier_matches = 30;   // map to weight close to min_weight
+    int max_num_inlier_matches = 200;  // map to weight close to 1.0
+
     // Minimum number of 3D points to camera correspondences for each
     // camera. These points can help constrain the problem and add robustness to
     // collinear configurations, but are not necessary to compute the position.
@@ -151,9 +157,19 @@ class NonlinearPositionEstimator : public PositionEstimator {
   DISALLOW_COPY_AND_ASSIGN(NonlinearPositionEstimator);
 
 private:
-  std::unique_ptr<ceres::LossFunction> loss_function_;
-};
+  NonlinearPositionEstimator(const Reconstruction &reconstruction,
+                             theia::LossFunctionType loss_function_type,
+                             double robust_loss_width, bool const_weight,
+                             double min_weight, double mid_point, double scale);
+  double compute_weight(const TwoViewInfo& two_view_info) const;
 
+  std::unique_ptr<ceres::LossFunction> loss_function_;
+
+  bool const_weight_;
+  double min_weight_;
+  double mid_point_;
+  double scale_;
+};
 }  // namespace theia
 
 #endif  // THEIA_SFM_GLOBAL_POSE_ESTIMATION_NONLINEAR_POSITION_ESTIMATOR_H_
