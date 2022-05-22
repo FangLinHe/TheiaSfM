@@ -17,7 +17,7 @@ then
 fi
 
 # Set up paths
-FLAGFILE=../applications/build_1dsfm_reconstruction_flags_gendarmenmarkt.txt
+FLAGFILE=../applications/build_1dsfm_reconstruction_flags_experiments.txt
 DATASET_ROOT=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/datasets
 COMPARE_RECONSTRUCTION_LOG_DIR="$LOGS_ROOT"/compare_reconstruction_results
 BUILD_RECONSTRUCTION_LOG_DIR="$LOGS_ROOT"/build_reconstruction_logs
@@ -50,7 +50,9 @@ VIEW_RECONSTRUCTION=false
 FORCE_BUILD_RECONSTRUCTION=false
 
 WEIGHT_TYPE="$([ "$CONST_WEIGHT" = true ] && echo "CONST-WEIGHT" || echo "DYNAMIC-WEIGHT")"
-WEIGHT_ARG="$([ "$CONST_WEIGHT" = true ] && echo "--rotation_estimation_const_weight" || echo "--norotation_estimation_const_weight")"
+ROT_WEIGHT_ARG=$([ "$CONST_WEIGHT" = true ] && echo "--rotation_estimation_const_weight" || echo "--norotation_estimation_const_weight")
+POS_WEIGHT_ARG=$([ "$CONST_WEIGHT" = true ] && echo "--position_estimation_const_weight" || echo "--noposition_estimation_const_weight")
+
 OUTPUT_RECONSTRUCTION_NAME="$DATASET_NAME-$ROTATION_ESTIMATOR"
 if [[ "$POSITION_ESTIMATOR" != LEAST_UNSQUARED_DEVIATION ]]
 then
@@ -79,7 +81,8 @@ fi
 if [[ "$FORCE_BUILD_RECONSTRUCTION" = true || ! -f "$DATASET_ROOT/$DATASET_NAME/$OUTPUT_RECONSTRUCTION_NAME-0" ]]
 then
     n=0
-    t=5
+    t=10
+    t_step=5
     until [ "$n" -ge 5 ]
     do
         echo "Building reconstruction...; see logs in $BUILD_RECONSTRUCTION_LOG_DIR"
@@ -87,7 +90,8 @@ then
             --flagfile "$FLAGFILE" \
             --1dsfm_dataset_directory "$DATASET_ROOT/$DATASET_NAME" \
             --output_reconstruction "$DATASET_ROOT/$DATASET_NAME/$OUTPUT_RECONSTRUCTION_NAME" \
-            "$WEIGHT_ARG" \
+            "$ROT_WEIGHT_ARG" \
+            "$POS_WEIGHT_ARG" \
             --global_rotation_estimator "$ROTATION_ESTIMATOR" \
             --global_position_estimator "$POSITION_ESTIMATOR" \
             --rotation_estimation_robust_loss_function "$ROBUST_LOSS_FUNCTION" \
@@ -98,8 +102,8 @@ then
             --nologtostderr \
         && break
         n=$((n+1))
-        t=$((t+3))
-        echo "Didn't finish building reconstruction in $((t-3)) minutes. Retrying with timeout $t minutes..."
+        t=$((t+t_step))
+        echo "Didn't finish building reconstruction in $((t-t_step)) minutes. Retrying with timeout $t minutes..."
         sleep 3
     done
 fi
