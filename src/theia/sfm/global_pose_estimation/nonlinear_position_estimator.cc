@@ -71,7 +71,7 @@ Vector3d GetRotatedFeatureRay(const Camera& camera,
   Camera temp_camera = camera;
   temp_camera.SetOrientationFromAngleAxis(orientation);
   // Get the image ray rotated into the world reference frame.
-  return camera.PixelToUnitDepthRay(feature).normalized();
+  return temp_camera.PixelToUnitDepthRay(feature).normalized();
 }
 
 // Sorts the pairs such that the number of views (i.e. the int) is sorted in
@@ -128,8 +128,6 @@ bool NonlinearPositionEstimator::EstimatePositions(
     std::unordered_map<ViewId, Vector3d>* positions) {
   CHECK_NOTNULL(positions);
   if (view_pairs.empty() || orientations.empty()) {
-    VLOG(2) << "Number of view_pairs = " << view_pairs.size()
-            << " Number of orientations = " << orientations.size();
     return false;
   }
   triangulated_points_.clear();
@@ -236,18 +234,12 @@ void NonlinearPositionEstimator::AddCameraToCameraConstraints(
         FindOrDie(orientations, view_id1), view_pair.second.position_2);
 
     auto weight = (const_weight_) ? 1.0 : compute_weight(view_pair.second);
-    VLOG(2) << "=========== Weight: " << weight;
     ceres::CostFunction *cost_function =
         PairwiseTranslationError::Create(translation_direction, weight);
 
     problem_->AddResidualBlock(cost_function, loss_function_.get(),
                                position1->data(), position2->data());
   }
-
-  VLOG(2) << problem_->NumResidualBlocks()
-          << " camera to camera constraints "
-             "were added to the position "
-             "estimation problem.";
 }
 
 void NonlinearPositionEstimator::AddPointToCameraConstraints(
