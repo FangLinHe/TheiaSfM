@@ -78,14 +78,20 @@ std::string PrintMeanMedianHistogram(
   return error_msg;
 }
 
-double AngularDifference(const Eigen::Vector3d& rotation1,
-                         const Eigen::Vector3d& rotation2) {
-  Eigen::Matrix3d rotation1_mat(
-      Eigen::AngleAxisd(rotation1.norm(), rotation1.normalized()));
-  Eigen::Matrix3d rotation2_mat(
-      Eigen::AngleAxisd(rotation2.norm(), rotation2.normalized()));
-  Eigen::Matrix3d rotation_loop = rotation1_mat.transpose() * rotation2_mat;
-  return Eigen::AngleAxisd(rotation_loop).angle();
+inline Eigen::Quaterniond
+ceres_quaternion_to_eigen(const Eigen::Vector4d &ceres_quat) {
+  return Eigen::Quaterniond{ceres_quat[0], ceres_quat[1], ceres_quat[2],
+                            ceres_quat[3]};
+}
+
+double AngularDifference(const Eigen::Vector3d &rotation1,
+                         const Eigen::Vector3d &rotation2) {
+  Eigen::Vector4d quaternion1, quaternion2;
+  ceres::AngleAxisToQuaternion(rotation1.data(), quaternion1.data());
+  ceres::AngleAxisToQuaternion(rotation2.data(), quaternion2.data());
+  Eigen::Quaterniond eigen_quaternion1 = ceres_quaternion_to_eigen(quaternion1);
+  Eigen::Quaterniond eigen_quaternion2 = ceres_quaternion_to_eigen(quaternion2);
+  return eigen_quaternion1.angularDistance(eigen_quaternion2);
 }
 
 // Aligns the orientations of the models (ignoring the positions) and reports
