@@ -27,8 +27,9 @@ DATASET_NAME="${1:-Madrid_Metropolis}"
 ROTATION_ESTIMATOR="${2:-NONLINEAR}"
 POSITION_ESTIMATOR="${3:-LEAST_UNSQUARED_DEVIATION}"
 ROBUST_LOSS_FUNCTION="${4:-HUBER}"
-ROBUST_LOSS_WIDTH="${5:-0.05}"
-CONST_WEIGHT="${6:-true}"
+ROT_ROBUST_LOSS_WIDTH="${5:-0.01}"
+POS_ROBUST_LOSS_WIDTH="${6:-0.005}"
+CONST_WEIGHT="${7:-true}"
 
 echo "================================================================="
 echo "Generate comparisons for the following settings:"
@@ -38,7 +39,11 @@ echo "* POSITION_ESTIMATOR: $POSITION_ESTIMATOR"
 if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 || "$POSITION_ESTIMATOR" == NONLINEAR ]]
 then
     echo "* ROBUST_LOSS_FUNCTION: $ROBUST_LOSS_FUNCTION"
-    echo "* ROBUST_LOSS_WIDTH: $ROBUST_LOSS_WIDTH"
+    echo "* ROT_ROBUST_LOSS_WIDTH: $ROT_ROBUST_LOSS_WIDTH"
+    if [[ "$POSITION_ESTIMATOR" == NONLINEAR ]]
+    then
+        echo "* POS_ROBUST_LOSS_WIDTH: $POS_ROBUST_LOSS_WIDTH"
+    fi
     if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 ]]
     then
         echo "* CONST_WEIGHT: $CONST_WEIGHT"
@@ -60,7 +65,11 @@ then
 fi
 if [[ "$ROTATION_ESTIMATOR" != ROBUST_L1L2 ]]
 then
-    OUTPUT_RECONSTRUCTION_NAME="$OUTPUT_RECONSTRUCTION_NAME-$WEIGHT_TYPE-$ROBUST_LOSS_FUNCTION-$ROBUST_LOSS_WIDTH"
+    OUTPUT_RECONSTRUCTION_NAME="$OUTPUT_RECONSTRUCTION_NAME-$WEIGHT_TYPE-$ROBUST_LOSS_FUNCTION-$ROT_ROBUST_LOSS_WIDTH"
+fi
+if [[ "$POSITION_ESTIMATOR" = NONLINEAR ]]
+then
+    OUTPUT_RECONSTRUCTION_NAME="$OUTPUT_RECONSTRUCTION_NAME-$POS_ROBUST_LOSS_WIDTH"
 fi
 GT_RECONSTRUCTION_NAME="${DATASET_NAME}_gt_reconstruction"
 
@@ -95,9 +104,9 @@ then
             --global_rotation_estimator "$ROTATION_ESTIMATOR" \
             --global_position_estimator "$POSITION_ESTIMATOR" \
             --rotation_estimation_robust_loss_function "$ROBUST_LOSS_FUNCTION" \
-            --rotation_estimation_robust_loss_width "$ROBUST_LOSS_WIDTH" \
+            --rotation_estimation_robust_loss_width "$ROT_ROBUST_LOSS_WIDTH" \
             --position_estimation_robust_loss_function "$ROBUST_LOSS_FUNCTION" \
-            --position_estimation_robust_loss_width "$ROBUST_LOSS_WIDTH" \
+            --position_estimation_robust_loss_width "$POS_ROBUST_LOSS_WIDTH" \
             --log_dir "$BUILD_RECONSTRUCTION_LOG_DIR" \
             --nologtostderr \
         && break
@@ -123,6 +132,7 @@ echo "Comparing reconstruction to ground truth...; see logs in $COMPARE_RECONSTR
 ./bin/compare_reconstructions \
     --reference_reconstruction "$DATASET_ROOT/$DATASET_NAME/$GT_RECONSTRUCTION_NAME" \
     --reconstruction_to_align "$DATASET_ROOT/$DATASET_NAME/$OUTPUT_RECONSTRUCTION_NAME-0" \
+    --robust_alignment_threshold 1.0 \
     --log_dir "$COMPARE_RECONSTRUCTION_LOG_DIR"
 
 

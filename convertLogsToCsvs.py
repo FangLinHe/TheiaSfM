@@ -8,7 +8,7 @@ CSV_OUTPUT = Path(__file__).parent / "logs" / "compare_reconstruction_results.cs
 DEDUPLICATE = True
 
 if __name__ == '__main__':
-    column_names = ['dataset', 'rot_cost_function', 'pos_cost_function', 'weight_type', 'loss_function', 'robust_width',
+    column_names = ['dataset', 'rot_cost_function', 'pos_cost_function', 'weight_type', 'loss_function', 'rot_robust_width', 'pos_robust_width',
                     'gt_total_cameras', 'total_cameras', 'common_cameras',
                     'gt_total_3d_points', 'total_3d_points',
                     'rotation_error_mean', 'rotation_error_median',
@@ -19,26 +19,33 @@ if __name__ == '__main__':
     for log_path in LOG_FOLDER.glob('*.txt'):
         row = {}
 
-        regexp1 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)-(\S+)-(\S+)-WEIGHT-(\S+)-(\S+)\.txt')
+        regexp1 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)-(\S+)-(\S+)-WEIGHT-(\S+)-(\S+)-(\S+)\.txt')
         regexp2 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)-(\S+)-WEIGHT-(\S+)-(\S+)\.txt')
-        regexp3 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)\.txt')
+        regexp3 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)-(\S+)-(\S+)\.txt')
+        regexp4 = re.compile('compare_reconstructions\.\S+\.\S+\.\S+\.log\.\S+\.\S+\.\S+\.(\S+)-(\S+)\.txt')
         re_match = regexp1.match(log_path.name)
         if re_match:
-            dataset, rot_cost_function, pos_cost_function, weight_type, loss_function, robust_width = re_match.groups()
+            dataset, rot_cost_function, pos_cost_function, weight_type, loss_function, rot_robust_width, pos_robust_width = re_match.groups()
         else:
             re_match = regexp2.match(log_path.name)
             if re_match:
-                dataset, rot_cost_function, weight_type, loss_function, robust_width = re_match.groups()
+                dataset, rot_cost_function, weight_type, loss_function, rot_robust_width = re_match.groups()
                 pos_cost_function = 'LEAST_UNSQUARED_DEV'
+                pos_robust_width = 'N/A'
             else:
                 re_match = regexp3.match(log_path.name)
-                assert re_match is not None
-                dataset, rot_cost_function = re_match.groups()
-                pos_cost_function = 'LEAST_UNSQUARED_DEV'
-                weight_type = loss_function = robust_width = 'N/A'
+                if re_match:
+                    dataset, rot_cost_function, pos_cost_function, pos_robust_width  = re_match.groups()
+                    weight_type = loss_function = rot_robust_width = 'N/A'
+                else:
+                    re_match = regexp4.match(log_path.name)
+                    assert re_match is not None
+                    dataset, rot_cost_function = re_match.groups()
+                    pos_cost_function = 'LEAST_UNSQUARED_DEV'
+                    weight_type = loss_function = rot_robust_width = pos_robust_width = 'N/A'
 
         print(log_path)
-        key = '-'.join((dataset, rot_cost_function, pos_cost_function, weight_type, loss_function, robust_width))
+        key = '-'.join((dataset, rot_cost_function, pos_cost_function, weight_type, loss_function, rot_robust_width, pos_robust_width))
         if key in keys:
             continue
         keys.add(key)
@@ -47,7 +54,8 @@ if __name__ == '__main__':
         row['pos_cost_function'] = pos_cost_function
         row['weight_type'] = weight_type
         row['loss_function'] = loss_function
-        row['robust_width'] = robust_width
+        row['rot_robust_width'] = rot_robust_width
+        row['pos_robust_width'] = pos_robust_width
 
         with open(log_path, 'rt') as log_file:
             line = log_file.readline().rstrip()
@@ -104,10 +112,10 @@ if __name__ == '__main__':
 
         assert len(set(row.keys()).difference(column_names)) == 0
         rows.append(row)
-        
-        with open(CSV_OUTPUT, 'wt') as output_file:
-            dict_writer = csv.DictWriter(output_file, column_names)
-            dict_writer.writeheader()
-            dict_writer.writerows(rows)
+    
+    with open(CSV_OUTPUT, 'wt') as output_file:
+        dict_writer = csv.DictWriter(output_file, column_names)
+        dict_writer.writeheader()
+        dict_writer.writerows(rows)
 
-            print(f"Processing done. CSV file: {CSV_OUTPUT}")
+        print(f"Processing done. CSV file: {CSV_OUTPUT}")
