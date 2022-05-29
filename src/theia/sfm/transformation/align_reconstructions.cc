@@ -153,10 +153,11 @@ void AlignReconstructionsRobust(
 
   // Estimate with RANSAC.
   RansacParameters params;
-  params.max_iterations = 1000;
-  params.use_mle = true;
+  params.min_iterations = 500;
+  params.max_iterations = 500;
+  params.use_mle = false;
   params.error_thresh = robust_error_threshold * robust_error_threshold;
-  params.failure_probability = 1e-4;
+  params.failure_probability = 1e-8;
 
   CameraAlignmentEstimator estimator;
   Ransac<CameraAlignmentEstimator> ransac(params, estimator);
