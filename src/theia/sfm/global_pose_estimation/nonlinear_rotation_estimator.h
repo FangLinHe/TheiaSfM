@@ -144,7 +144,7 @@ public:
     // choice.
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-    options.max_num_iterations = 200;
+    options.max_num_iterations = 500;
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, problem.get(), &summary);

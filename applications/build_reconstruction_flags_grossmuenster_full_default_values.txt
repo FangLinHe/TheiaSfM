@@ -2,7 +2,7 @@
 # Input/output files.
 # Set these if a matches file is not present. Images should be a filepath with a
 # wildcard e.g., /home/my_username/my_images/*.jpg
---images=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/bucket/*.jpeg
+--images=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/Grossmünster_full/*.jpg
 
 # If a matches file has already been created, set the filepath here. This avoids
 # having to recompute all features and matches.
@@ -12,7 +12,7 @@
 # explicit calibration. Theia attempts to extract EXIF focal lengths if calibration
 # is not supplied for a given image.
 --calibration_file=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/bucket/calibration.txt
---output_reconstruction=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/bucket-reconstruction
+--output_reconstruction=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/Grossmünster_full-default-values-reconstruction
 
 ############### Multithreading ###############
 # Set to the number of threads you want to use.
@@ -31,7 +31,7 @@
 # During feature matching, features are saved to disk so that out-of-core
 # matching may be performed. This directory specifies which directory those
 # features should be saved to.
---matching_working_directory=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/bucket_matches
+--matching_working_directory=/Users/fang-linhe/Documents/fl/ETH/3DVision/Project/Data/Grossmünster_full_matches
 
 # During feature matching we utilize an LRU cache for out-of-core matching. The size
 # of that cache (in terms of number of images) is controlled by this parameter. The
@@ -70,10 +70,10 @@
 --only_calibrated_views=false
 
 ############### Global SfM Options ###############
---global_position_estimator=NONLINEAR
-#--global_position_estimator=LEAST_UNSQUARED_DEVIATION
---global_rotation_estimator=NONLINEAR_QUATERNION_ROTATION_ERROR
-#--global_rotation_estimator=ROBUST_L1L2
+#--global_position_estimator=NONLINEAR
+--global_position_estimator=LEAST_UNSQUARED_DEVIATION
+#--global_rotation_estimator=NONLINEAR_QUATERNION_ROTATION_ERROR
+--global_rotation_estimator=ROBUST_L1L2
 --post_rotation_filtering_degrees=15.0
 
 # This refinement is very unstable for rotation-only motions so
@@ -89,14 +89,14 @@
 --filter_relative_translations_with_1dsfm=true
 
 # Nonlinear rotation estimation options
---rotation_estimation_robust_loss_function=TUKEY
---rotation_estimation_robust_loss_width=0.5
+--rotation_estimation_robust_loss_function=CAUCHY
+--rotation_estimation_robust_loss_width=0.10
 --norotation_estimation_const_weight
 
 # Nonlinear position estimation options
 --position_estimation_min_num_tracks_per_view=6
---position_estimation_robust_loss_function=TUKEY
---position_estimation_robust_loss_width=0.5
+--position_estimation_robust_loss_function=CAUCHY
+--position_estimation_robust_loss_width=0.10
 --noposition_estimation_const_weight
 
 # If true, perform a single iteration of bundle adjustment only on the camera
@@ -122,7 +122,7 @@
 # Set this parameter to a value other than NONE if you want to utilize a robust
 # cost function during bundle adjustment. This can increase robustness to outliers
 # during the optimization.
---bundle_adjustment_robust_loss_function=TUKEY
+--bundle_adjustment_robust_loss_function=HUBER
 
 # Set this value to the determine the reprojection error in pixelst at which
 # robustness begins (if a robust cost function is being used).
