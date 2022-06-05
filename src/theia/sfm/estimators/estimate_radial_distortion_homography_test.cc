@@ -70,10 +70,10 @@ static constexpr double kRadialDistortion2 = -5e-7;
 static constexpr double kReprojectionError = 3.0;
 
 // allowing 10 percent error for radial distortion parameters
-static constexpr double kRadDistThreshold1 =
-    0.1 * std::abs(kRadialDistortion1 * std::pow(kFocalLength1, 2));
-static constexpr double kRadDistThreshold2 =
-    0.1 * std::abs(kRadialDistortion2 * std::pow(kFocalLength2, 2));
+static const double kRadDistThreshold1 =
+    -0.1 * std::abs(kRadialDistortion1 * std::pow(kFocalLength1, 2));
+static const double kRadDistThreshold2 =
+    -0.1 * std::abs(kRadialDistortion2 * std::pow(kFocalLength2, 2));
 
 // Generate points on a plane so that a homography can accurately estimate the
 // motion.

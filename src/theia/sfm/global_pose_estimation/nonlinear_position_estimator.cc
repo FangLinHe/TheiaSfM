@@ -71,7 +71,7 @@ Vector3d GetRotatedFeatureRay(const Camera& camera,
   Camera temp_camera = camera;
   temp_camera.SetOrientationFromAngleAxis(orientation);
   // Get the image ray rotated into the world reference frame.
-  return camera.PixelToUnitDepthRay(feature).normalized();
+  return temp_camera.PixelToUnitDepthRay(feature).normalized();
 }
 
 // Sorts the pairs such that the number of views (i.e. the int) is sorted in
@@ -83,14 +83,37 @@ bool CompareViewsPerTrack(const std::pair<TrackId, int>& t1,
 
 }  // namespace
 
+inline double compute_mid_point(int min_num_inlier_matches,
+                                int max_num_inlier_matches) {
+  return static_cast<double>(min_num_inlier_matches + max_num_inlier_matches) *
+         0.5;
+}
+
+inline double compute_scale(int min_num_inlier_matches,
+                            int max_num_inlier_matches) {
+  return static_cast<double>(max_num_inlier_matches - min_num_inlier_matches) /
+         12.0;
+}
+
 NonlinearPositionEstimator::NonlinearPositionEstimator(
-    const NonlinearPositionEstimator::Options& options,
-    const Reconstruction& reconstruction)
-    : options_(options), reconstruction_(reconstruction) {
+    const NonlinearPositionEstimator::Options &options,
+    const Reconstruction &reconstruction)
+    : options_(options), reconstruction_(reconstruction),
+      loss_function_(CreateLossFunction(options_.loss_function_type,
+                                        options_.robust_loss_width)),
+      const_weight_(options_.const_weight), min_weight_(options_.min_weight),
+      mid_point_(compute_mid_point(options_.min_num_inlier_matches,
+                                   options_.max_num_inlier_matches)),
+      scale_(compute_scale(options_.min_num_inlier_matches,
+                           options_.max_num_inlier_matches)) {
   CHECK_GT(options_.num_threads, 0);
   CHECK_GE(options_.min_num_points_per_view, 0);
   CHECK_GT(options_.point_to_camera_weight, 0);
   CHECK_GT(options_.robust_loss_width, 0);
+  CHECK_GE(min_weight_, 0);
+  CHECK_LE(min_weight_, 1);
+  CHECK_GT(mid_point_, 0);
+  CHECK_GT(scale_, 0);
 
   if (options_.rng.get() == nullptr) {
     rng_ = std::make_shared<RandomNumberGenerator>();
@@ -105,12 +128,14 @@ bool NonlinearPositionEstimator::EstimatePositions(
     std::unordered_map<ViewId, Vector3d>* positions) {
   CHECK_NOTNULL(positions);
   if (view_pairs.empty() || orientations.empty()) {
-    VLOG(2) << "Number of view_pairs = " << view_pairs.size()
-            << " Number of orientations = " << orientations.size();
     return false;
   }
   triangulated_points_.clear();
-  problem_.reset(new ceres::Problem());
+
+  ceres::Problem::Options problem_options;
+  problem_options.loss_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
+  problem_.reset(new ceres::Problem(problem_options));
+
   view_pairs_ = &view_pairs;
 
   // Iterative schur is only used if the problem is large enough, otherwise
@@ -179,9 +204,19 @@ void NonlinearPositionEstimator::InitializeRandomPositions(
   }
 }
 
+double NonlinearPositionEstimator::compute_weight(
+    const TwoViewInfo &two_view_info) const {
+  auto weight =
+      1 / (1 + exp(-(static_cast<double>(two_view_info.num_verified_matches) -
+                     mid_point_) /
+                   scale_));
+  return min_weight_ + weight * (1.0 - min_weight_);
+}
+
 void NonlinearPositionEstimator::AddCameraToCameraConstraints(
     const std::unordered_map<ViewId, Vector3d>& orientations,
     std::unordered_map<ViewId, Vector3d>* positions) {
+  CHECK(loss_function_ != nullptr);
   for (const auto& view_pair : *view_pairs_) {
     const ViewId view_id1 = view_pair.first.first;
     const ViewId view_id2 = view_pair.first.second;
@@ -198,19 +233,13 @@ void NonlinearPositionEstimator::AddCameraToCameraConstraints(
     const Vector3d translation_direction = GetRotatedTranslation(
         FindOrDie(orientations, view_id1), view_pair.second.position_2);
 
-    ceres::CostFunction* cost_function =
-        PairwiseTranslationError::Create(translation_direction, 1.0);
+    auto weight = (const_weight_) ? 1.0 : compute_weight(view_pair.second);
+    ceres::CostFunction *cost_function =
+        PairwiseTranslationError::Create(translation_direction, weight);
 
-    problem_->AddResidualBlock(cost_function,
-                               new ceres::HuberLoss(options_.robust_loss_width),
-                               position1->data(),
-                               position2->data());
+    problem_->AddResidualBlock(cost_function, loss_function_.get(),
+                               position1->data(), position2->data());
   }
-
-  VLOG(2) << problem_->NumResidualBlocks()
-          << " camera to camera constraints "
-             "were added to the position "
-             "estimation problem.";
 }
 
 void NonlinearPositionEstimator::AddPointToCameraConstraints(
@@ -354,7 +383,7 @@ void NonlinearPositionEstimator::AddTrackToProblem(
 
     // Add the residual block
     problem_->AddResidualBlock(cost_function,
-                               new ceres::HuberLoss(options_.robust_loss_width),
+                               loss_function_.get(),
                                camera_position.data(),
                                point.data());
   }

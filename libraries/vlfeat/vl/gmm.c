@@ -1100,7 +1100,7 @@ VL_XCAT(_vl_gmm_maximization_, SFX)
 
         clusterPosteriorSum_ [i_cl] += p ;
 
-        #ifndef VL_DISABLE_AVX
+        #if !defined(VL_DISABLE_AVX) && !defined(VL_DISABLE_SSE2)
         if (vl_get_simd_enabled() && vl_cpu_has_avx()) {
           VL_XCAT(_vl_weighted_mean_sse2_, SFX)
           (self->dimension,

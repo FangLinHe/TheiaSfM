@@ -114,6 +114,8 @@ inline GlobalRotationEstimatorType StringToRotationEstimatorType(
     return GlobalRotationEstimatorType::NONLINEAR;
   } else if (rotation_estimator == "LINEAR") {
     return GlobalRotationEstimatorType::LINEAR;
+  } else if (rotation_estimator == "NONLINEAR_QUATERNION_ROTATION_ERROR") {
+    return GlobalRotationEstimatorType::NONLINEAR_QUATERNION_ROTATION_ERROR;
   } else {
     LOG(FATAL)
         << "Invalid rotation estimator type. Using ROBUST_L1L2 instead.";

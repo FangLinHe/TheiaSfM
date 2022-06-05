@@ -144,7 +144,7 @@ set(THEIA_SRC
   sfm/global_pose_estimation/linear_position_estimator.cc
   sfm/global_pose_estimation/linear_rotation_estimator.cc
   sfm/global_pose_estimation/nonlinear_position_estimator.cc
-  sfm/global_pose_estimation/nonlinear_rotation_estimator.cc
+  sfm/global_pose_estimation/pairwise_quaternion_rotation_error.cc
   sfm/global_pose_estimation/pairwise_rotation_error.cc
   sfm/global_pose_estimation/pairwise_translation_and_scale_error.cc
   sfm/global_pose_estimation/pairwise_translation_error.cc
@@ -252,7 +252,7 @@ if (BUILD_TESTING)
     list(GET TEST_NAME_LIST 0 TEST_NAME)
     add_executable(${TEST_NAME}_test test/test_main.cc ${FILENAME}_test.cc)
     target_link_libraries(${TEST_NAME}_test
-      gtest
+      gtest_main
       theia
       ${THEIA_LIBRARY_DEPENDENCIES})
     add_test(NAME ${TEST_NAME}_test
@@ -321,6 +321,7 @@ if (BUILD_TESTING)
   gtest(sfm/global_pose_estimation/linear_position_estimator)
   gtest(sfm/global_pose_estimation/linear_rotation_estimator)
   gtest(sfm/global_pose_estimation/nonlinear_position_estimator)
+  gtest(sfm/global_pose_estimation/pairwise_quaternion_rotation_error)
   gtest(sfm/global_pose_estimation/pairwise_rotation_error)
   gtest(sfm/global_pose_estimation/pairwise_translation_and_scale_error)
   gtest(sfm/global_pose_estimation/pairwise_translation_error)

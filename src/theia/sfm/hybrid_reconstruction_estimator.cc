@@ -52,6 +52,7 @@
 #include "theia/sfm/find_common_tracks_in_views.h"
 #include "theia/sfm/global_pose_estimation/linear_rotation_estimator.h"
 #include "theia/sfm/global_pose_estimation/nonlinear_rotation_estimator.h"
+#include "theia/sfm/global_pose_estimation/pairwise_quaternion_rotation_error.h"
 #include "theia/sfm/global_pose_estimation/robust_rotation_estimator.h"
 #include "theia/sfm/global_pose_estimation/rotation_estimator.h"
 #include "theia/sfm/localize_view_to_reconstruction.h"
@@ -331,7 +332,16 @@ bool HybridReconstructionEstimator::EstimateCameraOrientations() {
       // spanning tree.
       CHECK(OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_))
           << "Could not estimate orientations from a spanning tree.";
-      rotation_estimator.reset(new NonlinearRotationEstimator());
+      rotation_estimator.reset(new NonlinearRotationEstimator<PairwiseRotationError>());
+      break;
+    }
+    case GlobalRotationEstimatorType::NONLINEAR_QUATERNION_ROTATION_ERROR: {
+      // Initialize the orientation estimations by walking along the maximum
+      // spanning tree.
+      CHECK(OrientationsFromMaximumSpanningTree(*view_graph_, &orientations_))
+          << "Could not estimate orientations from a spanning tree.";
+      rotation_estimator.reset(
+          new NonlinearRotationEstimator<PairwiseQuaternionRotationError>());
       break;
     }
     case GlobalRotationEstimatorType::LINEAR: {

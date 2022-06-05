@@ -150,7 +150,7 @@ bool ExifReader::ExtractEXIFMetadata(
   camera_intrinsics_prior->focal_length.is_set = true;
 
   // Set GPS latitude.
-  const oiio::ImageIOParameter* latitude =
+  const oiio::ParamValue* latitude =
       image_spec.find_attribute("GPS:Latitude");
   if (latitude != nullptr) {
     camera_intrinsics_prior->latitude.is_set = true;
@@ -169,7 +169,7 @@ bool ExifReader::ExtractEXIFMetadata(
   }
 
   // Set GPS longitude.
-  const oiio::ImageIOParameter* longitude =
+  const oiio::ParamValue* longitude =
       image_spec.find_attribute("GPS:Longitude");
   if (longitude != nullptr) {
     camera_intrinsics_prior->longitude.is_set = true;
@@ -189,7 +189,7 @@ bool ExifReader::ExtractEXIFMetadata(
 
 
   // Set GSP altitude.
-  const oiio::ImageIOParameter* altitude =
+  const oiio::ParamValue* altitude =
       image_spec.find_attribute("GPS:Altitude");
   if (altitude != nullptr) {
     camera_intrinsics_prior->altitude.is_set = true;

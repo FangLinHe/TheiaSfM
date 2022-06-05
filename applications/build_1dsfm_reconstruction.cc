@@ -124,14 +124,63 @@ DEFINE_int32(num_retriangulation_iterations,
              "Number of times to retriangulate any unestimated tracks. Bundle "
              "adjustment is performed after retriangulation.");
 
+// Nonlinear rotation estimation options.
+DEFINE_string(rotation_estimation_robust_loss_function,
+              "SOFTLONE",
+              "By setting this to an option other than NONE, a robust loss "
+              "function will be used during rotation estimation which can "
+              "improve robustness to outliers. Options are NONE, HUBER, "
+              "SOFTLONE, CAUCHY, ARCTAN, and TUKEY.");
+DEFINE_double(rotation_estimation_robust_loss_width,
+              0.1,
+              "Robust loss width to use for rotation estimation.");
+DEFINE_bool(rotation_estimation_const_weight,
+            false,
+            "Use constant weight = 1.0 for all view pairs when computing "
+            "rotation residuals.");
+DEFINE_double(rotation_estimation_min_weight,
+              0.5,
+              "Minimum value of rotation residual weight, so the weights are in "
+              "range [rotation_estimation_min_weight, 1].");
+DEFINE_int32(rotation_estimation_min_num_inlier_matches,
+             30,
+             "Map the number of inlier matches to a weight, where this value "
+             "would be mapped to the weight close to rotation_estimation_min_weight.");
+DEFINE_int32(rotation_estimation_max_num_inlier_matches,
+             200,
+             "Map the number of inlier matches to a weight, where this value "
+             "would be mapped to the weight close to 1.");
+
 // Nonlinear position estimation options.
 DEFINE_int32(
     position_estimation_min_num_tracks_per_view,
     0,
     "Minimum number of point to camera constraints for position estimation.");
+DEFINE_string(position_estimation_robust_loss_function,
+              "HUBER",
+              "By setting this to an option other than NONE, a robust loss "
+              "function will be used during position estimation which can "
+              "improve robustness to outliers. Options are NONE, HUBER, "
+              "SOFTLONE, CAUCHY, ARCTAN, and TUKEY.");
 DEFINE_double(position_estimation_robust_loss_width,
               0.1,
               "Robust loss width to use for position estimation.");
+DEFINE_bool(position_estimation_const_weight,
+            false,
+            "Use constant weight = 1.0 for all view pairs when computing "
+            "position residuals.");
+DEFINE_double(position_estimation_min_weight,
+              0.5,
+              "Minimum value of position residual weight, so the weights are in "
+              "range [position_estimation_min_weight, 1].");
+DEFINE_int32(position_estimation_min_num_inlier_matches,
+             30,
+             "Map the number of inlier matches to a weight, where this value "
+             "would be mapped to the weight close to position_estimation_min_weight.");
+DEFINE_int32(position_estimation_max_num_inlier_matches,
+             200,
+             "Map the number of inlier matches to a weight, where this value "
+             "would be mapped to the weight close to 1.");
 
 // Incremental SfM options.
 DEFINE_double(absolute_pose_reprojection_error_threshold,
@@ -244,11 +293,43 @@ ReconstructionBuilderOptions SetReconstructionBuilderOptions() {
       FLAGS_extract_maximal_rigid_subgraph;
   reconstruction_estimator_options.filter_relative_translations_with_1dsfm =
       FLAGS_filter_relative_translations_with_1dsfm;
+
   reconstruction_estimator_options.rotation_filtering_max_difference_degrees =
       FLAGS_post_rotation_filtering_degrees;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .loss_function_type =
+      StringToLossFunction(FLAGS_rotation_estimation_robust_loss_function);
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .robust_loss_width = FLAGS_rotation_estimation_robust_loss_width;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .const_weight = FLAGS_rotation_estimation_const_weight;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .min_weight = FLAGS_rotation_estimation_min_weight;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .min_num_inlier_matches =
+      FLAGS_rotation_estimation_min_num_inlier_matches;
+  reconstruction_estimator_options.nonlinear_rotation_estimator_options
+      .max_num_inlier_matches =
+      FLAGS_rotation_estimation_max_num_inlier_matches;
+
   reconstruction_estimator_options.nonlinear_position_estimator_options
       .min_num_points_per_view =
       FLAGS_position_estimation_min_num_tracks_per_view;
+  reconstruction_estimator_options.nonlinear_position_estimator_options
+      .loss_function_type =
+      StringToLossFunction(FLAGS_position_estimation_robust_loss_function);
+  reconstruction_estimator_options.nonlinear_position_estimator_options
+      .robust_loss_width = FLAGS_position_estimation_robust_loss_width;
+  reconstruction_estimator_options.nonlinear_position_estimator_options
+      .const_weight = FLAGS_position_estimation_const_weight;
+  reconstruction_estimator_options.nonlinear_position_estimator_options
+      .min_weight = FLAGS_position_estimation_min_weight;
+  reconstruction_estimator_options.nonlinear_position_estimator_options
+      .min_num_inlier_matches =
+      FLAGS_position_estimation_min_num_inlier_matches;
+  reconstruction_estimator_options.nonlinear_position_estimator_options
+      .max_num_inlier_matches =
+      FLAGS_position_estimation_max_num_inlier_matches;
   reconstruction_estimator_options
       .refine_camera_positions_and_points_after_position_estimation =
       FLAGS_refine_camera_positions_and_points_after_position_estimation;

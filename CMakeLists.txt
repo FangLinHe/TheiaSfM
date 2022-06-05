@@ -32,30 +32,21 @@
 # Please contact the author of this library if you have any questions.
 # Author: Chris Sweeney (sweeney.chris.m@gmail.com)
 
-cmake_minimum_required(VERSION 2.8.3)
-if (COMMAND cmake_policy)
-  cmake_policy(SET CMP0003 NEW)
-endif (COMMAND cmake_policy)
-
-# Disable warnings about rpath on MacOS X for now.
-# TODO(cmsweeney): Figure out the proper way to handle this!
-if(POLICY CMP0042)
-  cmake_policy(SET CMP0042 NEW) # CMake 3.0
-endif()
+cmake_minimum_required(VERSION 3.4...3.18)
 
 project(THEIA C CXX)
 include_directories(${PROJECT_SOURCE_DIR})
 
 # Set up the git hook to make Gerrit Change-Id: lines in commit messages.
 set (LOCAL_GIT_DIRECTORY)
-if (EXISTS ${CMAKE_SOURCE_DIR}/.git)
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
   # .git directory can be found on Unix based system, or on Windows with
   # Git Bash (shipped with msysgit)
-  set (LOCAL_GIT_DIRECTORY ${CMAKE_SOURCE_DIR}/.git)
-else (EXISTS ${CMAKE_SOURCE_DIR}/.git)
-endif (EXISTS ${CMAKE_SOURCE_DIR}/.git)
+  set (LOCAL_GIT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+endif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
 
-if (EXISTS ${LOCAL_GIT_DIRECTORY})
+if (EXISTS ${LOCAL_GIT_DIRECTORY} AND IS_DIRECTORY ${LOCAL_GIT_DIRECTORY})
   if (NOT EXISTS ${LOCAL_GIT_DIRECTORY}/hooks/commit-msg)
     # Download the hook only if it is not already present. We borrow the hook
     # hosted by Ceres because it is not specific to the project.
@@ -70,21 +61,32 @@ if (EXISTS ${LOCAL_GIT_DIRECTORY})
            GROUP_READ GROUP_WRITE GROUP_EXECUTE
            WORLD_READ WORLD_EXECUTE)
   endif (NOT EXISTS ${LOCAL_GIT_DIRECTORY}/hooks/commit-msg)
-endif (EXISTS ${LOCAL_GIT_DIRECTORY})
+endif (EXISTS ${LOCAL_GIT_DIRECTORY} AND IS_DIRECTORY ${LOCAL_GIT_DIRECTORY})
 
 # ==============================================================================
 # Additional cmake find modules
 # ==============================================================================
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(BUILD_TESTING "Enable testing" ON)
 option(BUILD_DOCUMENTATION "Build html User's Guide" OFF)
+
+if (${BUILD_TESTING})
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+  )
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+endif (${BUILD_TESTING})
 
 enable_testing()
 if (NOT MSVC)
   add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=1)
 endif (NOT MSVC)
-set(GTEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/libraries/gtest")
+
 add_definitions(-DGTEST_TESTING_OUTPUT_DIRECTORY="${CMAKE_BINARY_DIR}/testing_output")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -101,7 +103,7 @@ set(THEIA_VERSION
 set(THEIA_ABI_VERSION 0.7.0)
 
 # THEIA data directory
-add_definitions(-DTHEIA_DATA_DIR="${CMAKE_SOURCE_DIR}/data")
+add_definitions(-DTHEIA_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 # Eigen
 set(MIN_EIGEN_VERSION 3.2.0)
@@ -151,10 +153,9 @@ endif (GLOG_FOUND)
 message("-- Check for Ceres")
 find_package(Ceres REQUIRED SuiteSparse)
 if (CERES_FOUND)
-  message("-- Found Ceres: ${CERES_INCLUDE_DIRS}")
+  message("-- Found Ceres: ${Ceres_DIR}")
 else (CERES_FOUND)
-  message(FATAL_ERROR "Can't find Ceres. Please set CERES_INCLUDE_DIR & "
-    "CERES_LIBRARY")
+  message(FATAL_ERROR "Can't find Ceres.")
 endif (CERES_FOUND)
 
 # OpenImageIO
@@ -216,7 +217,6 @@ endif (RapidJSON_FOUND)
 include_directories(
   include
   src
-  ${CERES_INCLUDE_DIRS}
   ${GFLAGS_INCLUDE_DIRS}
   ${GLOG_INCLUDE_DIRS}
   ${OPENIMAGEIO_INCLUDE_DIRS}
@@ -250,15 +250,13 @@ include_directories(
   ${cereal_SOURCE_DIR}/include
   ${flann_SOURCE_DIR}
   ${flann_SOURCE_DIR}/src/cpp
-  ${gtest_SOURCE_DIR}/include
-  ${gtest_SOURCE_DIR}
   ${optimo_SOURCE_DIR}
   ${statx_SOURCE_DIR}
   ${stlplus3_SOURCE_DIR}
   ${vlfeat_SOURCE_DIR}
   ${visual_sfm_SOURCE_DIR})
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(OptimizeTheiaCompilerFlags)
 optimizetheiacompilerflags()
 
@@ -275,16 +273,16 @@ endif (BUILD_DOCUMENTATION)
 
 # ---------------- Install commands ----------------- #
 # Install the .h files
-file(GLOB THEIA_HDRS ${CMAKE_SOURCE_DIR}/include/theia/*.h)
+file(GLOB THEIA_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/include/theia/*.h)
 install(FILES ${THEIA_HDRS} DESTINATION include/theia)
 
-file(GLOB_RECURSE THEIA_INTERNAL_HDRS ${CMAKE_SOURCE_DIR}/src/theia/*.h)
+file(GLOB_RECURSE THEIA_INTERNAL_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/src/theia/*.h)
 install(DIRECTORY src/theia/ DESTINATION include/theia FILES_MATCHING PATTERN "*.h")
 
 install(DIRECTORY libraries/ DESTINATION include/theia/libraries FILES_MATCHING PATTERN "*.h*")
 
 # Add an uninstall target to remove all installed files.
-configure_file("${CMAKE_SOURCE_DIR}/cmake/uninstall.cmake.in"
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/uninstall.cmake.in"
                "${CMAKE_BINARY_DIR}/cmake/uninstall.cmake"
                IMMEDIATE @ONLY)
 
@@ -325,25 +323,24 @@ file(RELATIVE_PATH INSTALL_ROOT_REL_CONFIG_INSTALL_DIR
 # Create a TheiaConfig.cmake file. <name>Config.cmake files are searched by
 # FIND_PACKAGE() automatically. We configure that file so that we can put any
 # information we want in it, e.g. version numbers, include directories, etc.
-configure_file("${CMAKE_SOURCE_DIR}/cmake/TheiaConfig.cmake.in"
-               "${CMAKE_CURRENT_BINARY_DIR}/TheiaConfig.cmake" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/TheiaConfig.cmake.in"
+               "${CMAKE_BINARY_DIR}/TheiaConfig.cmake" @ONLY)
 
 # Additionally, when CMake has found a TheiaConfig.cmake, it can check for a
 # TheiaConfigVersion.cmake in the same directory when figuring out the version
 # of the package when a version has been specified in the FIND_PACKAGE() call,
 # e.g. FIND_PACKAGE(Theia [0.5.2] REQUIRED). The version argument is optional.
-configure_file("${CMAKE_SOURCE_DIR}/cmake/TheiaConfigVersion.cmake.in"
-               "${CMAKE_CURRENT_BINARY_DIR}/TheiaConfigVersion.cmake" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/TheiaConfigVersion.cmake.in"
+               "${CMAKE_BINARY_DIR}/TheiaConfigVersion.cmake" @ONLY)
 
 # Install these files into the same directory as the generated exports-file,
 # we include the FindPackage scripts for libraries whose headers are included
 # in the public API of Theia and should thus be present in THEIA_INCLUDE_DIRS.
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/TheiaConfig.cmake"
-              "${CMAKE_CURRENT_BINARY_DIR}/TheiaConfigVersion.cmake"
-              "${CMAKE_SOURCE_DIR}/cmake/FindEigen.cmake"
-              "${CMAKE_SOURCE_DIR}/cmake/FindGlog.cmake"
-              "${CMAKE_SOURCE_DIR}/cmake/FindGflags.cmake"
-	            "${CMAKE_SOURCE_DIR}/cmake/FindOpenImageIO.cmake"
-              "${CMAKE_SOURCE_DIR}/cmake/FindRocksDB.cmake"
-              "${CMAKE_SOURCE_DIR}/cmake/FindSuiteSparse.cmake"
+install(FILES "${CMAKE_BINARY_DIR}/TheiaConfig.cmake"
+              "${CMAKE_BINARY_DIR}/TheiaConfigVersion.cmake"
+              "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindEigen.cmake"
+              "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGlog.cmake"
+              "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGflags.cmake"
+              "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindRocksDB.cmake"
+              "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSuiteSparse.cmake"
               DESTINATION ${CMAKECONFIG_INSTALL_DIR})
