@@ -1,32 +1,66 @@
-Copyright 2015-2016 Chris Sweeney (sweeney.chris.m@gmail.com)
-UC Santa Barbara
+# Exploring Cost and Loss Functions in global SfM pipelines
 
-What is this library?
----------------------
+The aim of our project is to explore cost and loss functions in global SfM pipelines.
+Our code is based on [Theia library](http://theia-sfm.org/). You can check the
+[original README.md](original_README.md) for more details.
 
-Theia is an end-to-end structure-from-motion library that was created by Chris
-Sweeney. It is designed to be very efficient, scalable, and accurate. All
-steps of the pipeline are designed to be modular so that code is easy to read
-and easy to extend.
+## Setup the build environment
 
-Please see the Theia website for detailed information, including instructions
-for building Theia and full documentation of the library. The website is
-currently located at http://www.theia-sfm.org
+As Theia depends on a lot of libraries, e.g., OpenImageIO, RocksDB, RapidJSON, etc.,
+setting up the build environment is quite frustrating. Thus, we have written a Dockerfile
+to set up the build environment. Manually installing all the dependencies is also possible,
+which we also made it compile successfully on MacBook Pro with M1 chip (ARM64), but
+building dependent libraries from source with specific versions might be necessary.
 
-Contact Information
--------------------
+## Download the dataset
 
-Questions, comments, and bug reports can be sent to the Theia mailing list:
-theia-vision-library@googlegroups.com
+We ran our experiments on [1DSfM dataset](https://www.cs.cornell.edu/projects/1dsfm/), where
+you can download `Datasets (tar.gz, 642 MB)` without photos and download images under each
+`Xyz images` link below. After downloading and uncompressing it, you can then move the
+photos under the dataset name `datasets/Xyz/images`.
 
-Citing this library
--------------------
+As mentioned in our report, we also reconstructed Grossmünster in Zürich using photos
+collected from Flickr. You can download the photos [here](https://studentethzch-my.sharepoint.com/:f:/g/personal/fanghe_student_ethz_ch/EhekYKY78F1HqZHkymyTpikBuGjaIPRZ4jGw-cx_vz3QyA?e=yFvCiK)
+or refer to the Jupyter-notebook `scripts/DownloadFlickrImages.ipynb` to see how to download
+other dataset by yourself.
 
-If you are using this library for academic research or publications we ask that
-you please cite this library as:
+## Build the library and applications
 
-    @misc{theia-manual,
-      author = {Chris Sweeney},
-      title = {Theia Multiview Geometry Library: Tutorial \& Reference},
-      howpublished = "\url{http://theia-sfm.org}",
-    }
+Similar to other CMake projects, to build the library and applications, simply run:
+```
+mkdir build
+cd build
+cmake ..
+make -j12
+```
+
+## Generate all comparisons
+
+In order to generate all comparisons of different parameters, e.g., rotation cost function,
+position loss function, robustness width of rotation loss function, etc., on each 1DSfM dataset,
+we have written a script `generateAllComparisons.sh` to run all the settings. Reconstruction
+usually takes between 1 and 5 minutes, so for all combinations, it would take several hours if
+not running in parallel.
+
+After running comparisons, you can find the raw outputs of running `build/bin/compare_reconstructions`
+under `logs/compare_reconstruction_results`. Then you can run `scripts/convertLogsToCsvs.py` to convert
+these files to a csv file `logs/compare_reconstruction_results.csv`, which puts the settings, camera
+counts, median and mean rotation / position errors, etc. into different columns.
+
+Note that the experiments are not deterministic due to `--robust_alignment_threshold 1.0` parameter
+when running `compare_reconstructions`, as it matches the cameras better using RANSAC. Without this
+parameter, the errors are much larger than the reported performance on
+[Theia-SfM website](http://theia-sfm.org/performance.html).
+
+## Build reconstruction using our own data
+
+To build the reconstruction using our own data, refer to the flags file
+`applications/build_reconstruction_flags_grossmuenster_full.txt`. You need to change the paths:
+`--images`, `--calibration_file`, `--output_reconstruction`, and `--matching_working_directory` to your
+local folders or files.
+
+Then, build the reconstruction:
+
+```
+build/bin/build_reconstruction --flagfile applications/build_reconstruction_flags_grossmuenster_full.txt
+```
