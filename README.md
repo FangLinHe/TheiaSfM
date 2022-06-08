@@ -4,6 +4,8 @@ The aim of our project is to explore cost and loss functions in global SfM pipel
 Our code is based on [Theia library](http://theia-sfm.org/). You can check the
 [original README.md](original_README.md) for more details.
 
+A list of our modifications to the original code can be found in `diff_files.txt`.
+
 ## Setup the build environment
 
 As Theia depends on a lot of libraries, e.g., OpenImageIO, RocksDB, RapidJSON, etc.,
@@ -64,3 +66,4 @@ Then, build the reconstruction:
 ```
 build/bin/build_reconstruction --flagfile applications/build_reconstruction_flags_grossmuenster_full.txt
 ```
+
