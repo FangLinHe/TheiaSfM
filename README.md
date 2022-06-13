@@ -36,6 +36,16 @@ cmake ..
 make -j12
 ```
 
+## View example reconstruction
+
+We uploaded an example reconstruction of Grossmünster `data/Grossmünster-reconstruction-0`. Not sure
+if it actually works to view reconstruction on a different machine, but you may try it:
+
+```
+cd build
+./bin/view_reconstruction --reconstruction ../data/Grossmünster-reconstruction-0
+```
+
 ## Generate all comparisons
 
 In order to generate all comparisons of different parameters, e.g., rotation cost function,

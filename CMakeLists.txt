@@ -38,7 +38,7 @@ project(THEIA C CXX)
 include_directories(${PROJECT_SOURCE_DIR})
 
 # Set up the git hook to make Gerrit Change-Id: lines in commit messages.
-set (LOCAL_GIT_DIRECTORY)
+set (LOCAL_GIT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git)
   # .git directory can be found on Unix based system, or on Windows with
   # Git Bash (shipped with msysgit)
